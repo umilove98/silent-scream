@@ -8,7 +8,7 @@ const redis = new Redis({
 });
 const POLL_MS = 1200;
 const MAX_DURATION_MS = 25000;
-const ROOMS = new Set(['rage','curse','nuclear']);
+const ROOMS = new Set(['rage','curse','nuclear','execute']);
 
 export default async function handler(req) {
   const url = new URL(req.url);

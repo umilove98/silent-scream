@@ -42,6 +42,12 @@
     --font: 'Impact','Arial Black',sans-serif;
     --shake-amp: 14px;
   }
+  body[data-theme="execute"] {
+    --bg: #0a0000;
+    --ink: #fff; --accent: #e60026;
+    --font: 'Impact','Arial Black','Malgun Gothic',sans-serif;
+    --shake-amp: 18px;
+  }
 
   /* ============ 스테이지 ============ */
   #stage {
@@ -73,6 +79,11 @@
   }
   body[data-theme="nuclear"] #stage::before {
     background: repeating-radial-gradient(circle at 50% 50%, transparent 0 40px, rgba(255,170,0,.05) 40px 42px);
+  }
+  body[data-theme="execute"] #stage::before {
+    background:
+      repeating-linear-gradient(45deg, rgba(230,0,38,.06) 0 30px, transparent 30px 60px),
+      radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,.85) 100%);
   }
 
   /* ============ 입력창 (덩그러니) ============ */
@@ -201,6 +212,83 @@
     100% { transform: translate(-50%,-50%) scale(14.2); opacity: 0; filter: blur(0); }
   }
 
+  /* EXECUTE - 처형장: 표적 등장 → 무기 휘둘러서 박살 */
+  .shout.verdict {
+    color: #fff;
+    font-style: italic;
+    text-shadow:
+      0 0 12px #e60026, 0 0 30px #8b0000,
+      4px 4px 0 #000, -4px -4px 0 #000;
+    -webkit-text-stroke: 2px #e60026;
+    animation: verdictLock var(--dur,1.5s) steps(8,end) forwards;
+  }
+  @keyframes verdictLock {
+    0%   { transform: translate(-50%,-50%) scale(3) rotate(-8deg); opacity: 0; filter: blur(20px); }
+    25%  { transform: translate(-50%,-50%) scale(1.2) rotate(2deg); opacity: 1; filter: blur(0); }
+    35%  { transform: translate(calc(-50% + 6px),-50%) scale(1.15) rotate(-1deg); }
+    45%  { transform: translate(calc(-50% - 6px),-50%) scale(1.15) rotate(1deg); }
+    55%  { transform: translate(-50%,-50%) scale(1.15) rotate(0); }
+    100% { transform: translate(-50%,-50%) scale(1.15) rotate(0); opacity: 1; }
+  }
+
+  /* 무기 (이모지) — 화면 밖에서 회전하며 날아와 중앙을 강타 */
+  .weapon {
+    position: absolute;
+    pointer-events: none;
+    z-index: 25;
+    font-size: 320px;
+    line-height: 1;
+    will-change: transform, opacity;
+    filter: drop-shadow(0 0 20px rgba(0,0,0,.8));
+  }
+
+  /* 충격선 — 임팩트 순간 사방으로 뻗치는 흰 선 */
+  .impact-line {
+    position: absolute;
+    pointer-events: none;
+    z-index: 28;
+    background: linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(255,255,255,.6) 60%, transparent 100%);
+    height: 6px;
+    transform-origin: 0% 50%;
+    will-change: transform, opacity;
+  }
+
+  /* 검은 비네트 — 극적 분위기 */
+  .vignette {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 22;
+    background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,.7) 100%);
+    opacity: 0;
+    will-change: opacity;
+  }
+
+  /* 빨간 위험 오버레이 — 빌드업 동안 깜빡임 */
+  #red-tint {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 24;
+    background: rgba(230,0,38,0);
+    transition: background 0.1s;
+  }
+  #red-tint.warn { background: rgba(230,0,38,.15); }
+  #red-tint.hit { background: rgba(230,0,38,.55); }
+
+  /* 줌 펀치 — 임팩트 순간 무대가 살짝 확대됐다가 돌아옴 */
+  body.zoom-punch #stage {
+    animation: zoomPunch .35s cubic-bezier(.2,.9,.3,1);
+  }
+  @keyframes zoomPunch {
+    0%   { transform: scale(1); }
+    20%  { transform: scale(1.08); }
+    100% { transform: scale(1); }
+  }
+
+  /* 히트 스톱 — 모든 애니메이션 일시 정지 */
+  body.hit-stop * { animation-play-state: paused !important; }
+
   /* 글자 가루(파편) — 부서진 글자조각이 사방으로 흩어짐 */
   .dust {
     position: absolute;
@@ -320,9 +408,11 @@
   <div id="stage">
   </div>
   <div id="flash"></div>
+  <div id="red-tint"></div>
 
   <div id="themes">
     <button data-theme="curse" class="active">curse</button>
+    <button data-theme="execute">execute</button>
     <button data-theme="rage">rage</button>
     <button data-theme="nuclear">nuclear</button>
   </div>
@@ -416,6 +506,80 @@ const THEMES = {
       }, i*80);
       // 가끔 추가 룬
       setTimeout(spawnRune, 600);
+    }
+  },
+
+  execute: {
+    title: '처형장 · EXECUTION',
+    label: '처형 횟수',
+    placeholder: '대상의 이름을 적어라...',
+    accent: '#e60026',
+    palette: ['#e60026','#8b0000','#a00018','#c00020','#ffffff'],
+    shoutClass: 'verdict',
+    detonate(text) {
+      const cx = innerWidth/2, cy = innerHeight/2;
+
+      // ── 0.0s : GUILTY 등장 + 표적 락온 (느리게, 무겁게)
+      spawnShout('GUILTY', {
+        x: cx, y: cy - 140, size: 80, color: '#e60026',
+        cls: 'verdict', dur: 1.5
+      });
+      // 대상 텍스트 (큼지막하게 가운데 락온)
+      spawnShout(text, {
+        x: cx, y: cy + 20, size: 200, color: '#fff',
+        cls: 'verdict', dur: 1.5
+      });
+      shake(0.3);
+
+      // ── 0.4s : 빨간 경고 깜빡임 시작
+      setTimeout(()=>redWarn(true), 400);
+      setTimeout(()=>redWarn(false), 700);
+      setTimeout(()=>redWarn(true), 850);
+      setTimeout(()=>redWarn(false), 1050);
+
+      // ── 1.1s : 무기가 화면 밖에서 회전하며 날아옴 (0.9s 동안)
+      const weapon = pick(WEAPONS);
+      setTimeout(()=>{
+        spawnWeaponSwing(weapon, 900);
+        // 무기 진입 중 점진적 흔들림 + 빨간 틴트 누적
+        shake(0.4);
+        setTimeout(()=>{ shake(0.6); redWarn(true); }, 300);
+        setTimeout(()=>{ shake(0.8); }, 600);
+      }, 1100);
+
+      // ── 2.0s : 임팩트 ███
+      setTimeout(()=>{
+        // 1) 흰색 풀스크린 플래시
+        flashOn();
+        // 2) 빨간 충격 오버레이
+        redHit();
+        // 3) 줌 펀치 (무대가 살짝 확대됐다가 돌아옴)
+        zoomPunch();
+        // 4) 최대 흔들림
+        shake(2);
+        // 5) 충격선
+        spawnImpactLines(cx, cy + 20, 24);
+        // 6) 핏물 폭발
+        spawnBloodSplatter(cx, cy + 20, 60);
+        // 7) 글자 산산조각
+        spawnShatter(text);
+        // 8) 히트 스톱 — 모든 애니메이션을 120ms 정지시켜 임팩트를 못박음
+        hitStop(120);
+      }, 2000);
+
+      // ── 2.4s : 후속 핏방울이 떨어지며 잔상
+      setTimeout(()=>{
+        for (let i=0;i<10;i++) spawnDrip(rand(0, innerWidth), rand(0, innerHeight*0.5));
+      }, 2400);
+
+      // ── 2.8s : 처형 결과 도장
+      setTimeout(()=>{
+        spawnShout('EXECUTED', {
+          x: cx, y: cy, size: 180, color: '#e60026',
+          cls: 'verdict', dur: 2
+        });
+        shake(0.5);
+      }, 2800);
     }
   },
 
@@ -547,6 +711,109 @@ function spawnRing(x,y) {
     { width:'2400px', height:'2400px', opacity:0, borderWidth:'1px' }
   ], { duration:1500, easing:'cubic-bezier(.1,.8,.2,1)' });
   setTimeout(()=>el.remove(),1500);
+}
+
+/* ============ EXECUTE 헬퍼들 ============ */
+const redTint = document.getElementById('red-tint');
+const WEAPONS = ['🗡️','🔨','🪓','🏏','🔪','⚔️','🪚'];
+
+// 히트 스톱: 모든 애니메이션을 ms 동안 일시정지
+function hitStop(ms) {
+  document.body.classList.add('hit-stop');
+  setTimeout(()=>document.body.classList.remove('hit-stop'), ms);
+}
+function zoomPunch() {
+  document.body.classList.remove('zoom-punch');
+  void document.body.offsetWidth;
+  document.body.classList.add('zoom-punch');
+  setTimeout(()=>document.body.classList.remove('zoom-punch'), 360);
+}
+function redWarn(on) { redTint.classList.toggle('warn', on); }
+function redHit() {
+  redTint.classList.remove('warn');
+  redTint.classList.add('hit');
+  setTimeout(()=>redTint.classList.remove('hit'), 220);
+}
+
+// 무기 휘두르기 — 화면 밖에서 회전하며 날아와 중앙을 강타
+function spawnWeaponSwing(emoji, hitDelay=900) {
+  const el = document.createElement('div');
+  el.className = 'weapon';
+  el.textContent = emoji;
+  // 랜덤 진입 방향
+  const angle = rand(0, Math.PI*2);
+  const dist = Math.max(innerWidth, innerHeight);
+  const startX = innerWidth/2 + Math.cos(angle) * dist;
+  const startY = innerHeight/2 + Math.sin(angle) * dist;
+  el.style.left = startX + 'px';
+  el.style.top = startY + 'px';
+  el.style.transform = 'translate(-50%,-50%) rotate(0deg)';
+  stage.appendChild(el);
+
+  const dx = innerWidth/2 - startX;
+  const dy = innerHeight/2 - startY;
+  const spin = rand(360, 1080) * (Math.random() > 0.5 ? 1 : -1);
+
+  el.animate([
+    { transform: 'translate(-50%,-50%) rotate(0deg) scale(1)', opacity: 1, offset: 0 },
+    { transform: `translate(calc(-50% + ${dx*0.6}px), calc(-50% + ${dy*0.6}px)) rotate(${spin*0.6}deg) scale(1.1)`, opacity: 1, offset: 0.7 },
+    { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) rotate(${spin}deg) scale(1.4)`, opacity: 1, offset: 1 }
+  ], { duration: hitDelay, easing: 'cubic-bezier(.55,.05,.95,.4)', fill: 'forwards' });
+
+  setTimeout(()=>el.remove(), hitDelay + 400);
+}
+
+// 충격선 — 임팩트 중심에서 사방으로 뻗치는 흰 직선
+function spawnImpactLines(x, y, count=18) {
+  for (let i=0;i<count;i++) {
+    const el = document.createElement('div');
+    el.className = 'impact-line';
+    const len = rand(180, 600);
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    el.style.width = len + 'px';
+    const angle = (i / count) * 360 + rand(-8, 8);
+    el.style.transform = `rotate(${angle}deg)`;
+    stage.appendChild(el);
+    el.animate([
+      { transform: `rotate(${angle}deg) scaleX(0)`, opacity: 1 },
+      { transform: `rotate(${angle}deg) scaleX(1)`, opacity: 1, offset: 0.3 },
+      { transform: `rotate(${angle}deg) scaleX(1.2)`, opacity: 0 }
+    ], { duration: 600, easing: 'cubic-bezier(.1,.9,.3,1)' });
+    setTimeout(()=>el.remove(), 650);
+  }
+}
+
+// 핏물 폭발 — 중심에서 사방으로 핏방울이 튀고 떨어짐
+function spawnBloodSplatter(x, y, count=40) {
+  for (let i=0;i<count;i++) {
+    const el = document.createElement('div');
+    const a = rand(0, Math.PI*2);
+    const speed = rand(200, 900);
+    const w = rand(6, 22);
+    el.style.position = 'absolute';
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    el.style.width = w + 'px';
+    el.style.height = w + 'px';
+    el.style.borderRadius = '50%';
+    el.style.background = pick(['#e60026','#8b0000','#a00018','#c00020']);
+    el.style.boxShadow = `0 0 ${w}px #4a0000`;
+    el.style.zIndex = 26;
+    el.style.pointerEvents = 'none';
+    stage.appendChild(el);
+    const dx = Math.cos(a) * speed;
+    const dy = Math.sin(a) * speed;
+    const dur = rand(800, 1800);
+    el.animate([
+      { transform: 'translate(0,0) scale(1)', opacity: 1 },
+      { transform: `translate(${dx*0.6}px, ${dy*0.6 + 100}px) scale(1.1)`, opacity: 1, offset: 0.5 },
+      { transform: `translate(${dx}px, ${dy + 400}px) scale(0.6)`, opacity: 0 }
+    ], { duration: dur, easing: 'cubic-bezier(.2,.7,.3,1)' });
+    setTimeout(()=>el.remove(), dur);
+  }
+  // 떨어지는 드립
+  for (let i=0;i<8;i++) spawnDrip(rand(0, innerWidth), rand(0, innerHeight*0.4));
 }
 
 function spawnEmber(x,y) {
