@@ -2,7 +2,10 @@ import { Redis } from '@upstash/redis';
 
 export const config = { runtime: 'edge' };
 
-const redis = Redis.fromEnv();
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_KV_REST_API_URL,
+  token: process.env.UPSTASH_REDIS_KV_REST_API_TOKEN,
+});
 const FEED_KEY = 'shouts:feed';
 const POLL_MS = 1200;
 const MAX_DURATION_MS = 25000;

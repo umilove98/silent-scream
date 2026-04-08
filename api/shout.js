@@ -1,6 +1,9 @@
 import { Redis } from '@upstash/redis';
 
-const redis = Redis.fromEnv();
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_KV_REST_API_URL,
+  token: process.env.UPSTASH_REDIS_KV_REST_API_TOKEN,
+});
 const FEED_KEY = 'shouts:feed';
 const MAX_LEN = 200;
 
