@@ -1069,12 +1069,7 @@ function connectStream() {
       if (!obj || !obj.id || seenIds.has(obj.id)) return;
       // 방 검증
       if (obj.room && obj.room !== currentTheme) return;
-      // 자기 자신이 보낸 건 스킵 (이미 로컬 큐에 들어가 있음)
-      if (obj.clientId && obj.clientId === CLIENT_ID) {
-        seenIds.add(obj.id);
-        if (typeof obj.ts === 'number' && obj.ts > sinceTs) sinceTs = obj.ts;
-        return;
-      }
+      // 자기 자신이 보낸 것도 큐에 같이 넣음 → 모든 브라우저가 동시에 재생
       seenIds.add(obj.id);
       if (typeof obj.ts === 'number' && obj.ts > sinceTs) sinceTs = obj.ts;
       enqueueShout(obj.text);
@@ -1104,10 +1099,7 @@ function go() {
   input.value = '';
   input.focus();
 
-  // 로컬도 큐로 — 즉시 발동 안 함, 순차 처리
-  enqueueShout(text);
-
-  // 서버로 전송 (백그라운드)
+  // 즉시 발동/큐 추가 안 함 — SSE로 다시 받아서 다른 브라우저와 동시에 재생
   fetch('/api/shout', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
