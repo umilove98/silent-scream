@@ -1060,6 +1060,8 @@ async function go() {
 
   // 로컬 즉각 피드백 (테마별 이펙트)
   THEMES[currentTheme].detonate(text);
+  count++;
+  countEl.textContent = count;
 
   // 서버로 전송 (실패해도 무시 — 로컬은 이미 떴음)
   try {
