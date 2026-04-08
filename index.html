@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>조용한 비명실 — SILENT SCREAM ROOM</title>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --ink: #fff;
+    --accent: #ff1744;
+    --font: 'Impact','Arial Black','Malgun Gothic',sans-serif;
+    --shake-amp: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font);
+    overflow: hidden;
+    user-select: none;
+    cursor: crosshair;
+    transition: background 0.6s ease;
+  }
+
+  /* ============ 테마별 배경 ============ */
+  body[data-theme="rage"] {
+    --bg: radial-gradient(circle at 50% 50%, #1a0000 0%, #000 70%);
+    --ink: #fff; --accent: #ff1744;
+    --font: 'Impact','Arial Black','Malgun Gothic',sans-serif;
+    --shake-amp: 10px;
+  }
+  body[data-theme="bamboo"] {
+    --bg: linear-gradient(180deg, #0a1f0a 0%, #1a3d1a 50%, #0d2d0d 100%);
+    --ink: #f4f1e8; --accent: #2d5016;
+    --font: 'Georgia','Batang','Malgun Gothic',serif;
+    --shake-amp: 2px;
+  }
+  body[data-theme="curse"] {
+    --bg: radial-gradient(ellipse at center, #2a0000 0%, #0a0000 60%, #000 100%);
+    --ink: #d4c4c4; --accent: #8b0000;
+    --font: 'Times New Roman','Batang',serif;
+    --shake-amp: 4px;
+  }
+  body[data-theme="skydive"] {
+    --bg: linear-gradient(180deg, #0a1a3a 0%, #2a5a9a 30%, #87ceeb 70%, #e0f6ff 100%);
+    --ink: #fff; --accent: #00bfff;
+    --font: 'Helvetica','Arial Black',sans-serif;
+    --shake-amp: 3px;
+  }
+  body[data-theme="nuclear"] {
+    --bg: radial-gradient(circle at 50% 50%, #3a2000 0%, #1a0a00 60%, #000 100%);
+    --ink: #fff; --accent: #ffaa00;
+    --font: 'Impact','Arial Black',sans-serif;
+    --shake-amp: 14px;
+  }
+
+  /* ============ 스테이지 ============ */
+  #stage {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+  }
+  #stage::before {
+    content: "";
+    position: absolute; inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    transition: opacity 0.6s;
+  }
+  body[data-theme="rage"] #stage::before {
+    background: repeating-linear-gradient(0deg, rgba(255,255,255,.02) 0 1px, transparent 1px 3px);
+    mix-blend-mode: screen;
+  }
+  body[data-theme="bamboo"] #stage::before {
+    background:
+      repeating-linear-gradient(90deg, transparent 0 80px, rgba(0,0,0,.3) 80px 88px, transparent 88px 160px),
+      radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,.6) 100%);
+    opacity: 0.7;
+  }
+  body[data-theme="curse"] #stage::before {
+    background:
+      radial-gradient(ellipse at center, transparent 20%, rgba(0,0,0,.85) 90%);
+    animation: candleFlicker 4s infinite;
+  }
+  @keyframes candleFlicker {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.85; }
+    52% { opacity: 0.6; }
+    54% { opacity: 0.95; }
+  }
+  body[data-theme="nuclear"] #stage::before {
+    background: repeating-radial-gradient(circle at 50% 50%, transparent 0 40px, rgba(255,170,0,.05) 40px 42px);
+  }
+
+  /* ============ 스카이다이빙 패럴랙스 ============ */
+  #sky-layer {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    display: none;
+  }
+  body[data-theme="skydive"] #sky-layer { display: block; }
+  .cloud {
+    position: absolute;
+    background: radial-gradient(ellipse, rgba(255,255,255,.95) 0%, rgba(255,255,255,.6) 40%, transparent 70%);
+    border-radius: 50%;
+    will-change: transform;
+    filter: blur(2px);
+  }
+  .bird {
+    position: absolute;
+    color: rgba(0,0,0,.6);
+    font-size: 24px;
+    will-change: transform;
+  }
+
+  /* ============ 입력 패널 ============ */
+  #panel {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    background: rgba(0,0,0,.78);
+    backdrop-filter: blur(10px);
+    border: 1px solid #333;
+    padding: 12px 16px;
+    border-radius: 12px;
+    z-index: 100;
+    box-shadow: 0 0 40px rgba(0,0,0,.6);
+    max-width: 95vw;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  #panel input[type="text"] {
+    background: #111;
+    border: 1px solid #444;
+    color: #fff;
+    padding: 10px 14px;
+    font-size: 16px;
+    font-family: inherit;
+    border-radius: 6px;
+    width: 320px;
+    outline: none;
+  }
+  #panel input[type="text"]:focus { border-color: var(--accent); }
+  #panel button#shout {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 10px 18px;
+    font-size: 15px;
+    font-weight: bold;
+    font-family: 'Impact','Arial Black',sans-serif;
+    border-radius: 6px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: transform .1s, box-shadow .2s;
+  }
+  #panel button#shout:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 25px var(--accent);
+  }
+  #panel label {
+    font-size: 11px;
+    color: #999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: sans-serif;
+  }
+  #panel input[type="range"] { width: 80px; accent-color: var(--accent); }
+  #panel input[type="color"] {
+    width: 36px; height: 30px; border: 1px solid #444;
+    background: #111; border-radius: 4px; cursor: pointer;
+  }
+
+  /* ============ 테마 탭 ============ */
+  #themes {
+    position: fixed;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+    z-index: 100;
+    background: rgba(0,0,0,.6);
+    padding: 6px;
+    border-radius: 30px;
+    backdrop-filter: blur(8px);
+    border: 1px solid #2a2a2a;
+  }
+  #themes button {
+    background: transparent;
+    color: #888;
+    border: none;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-family: sans-serif;
+    font-weight: bold;
+    border-radius: 20px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all .2s;
+  }
+  #themes button:hover { color: #fff; }
+  #themes button.active {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 0 20px var(--accent);
+  }
+
+  /* ============ 헤더/카운터 ============ */
+  #title {
+    position: fixed;
+    top: 20px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 14px;
+    letter-spacing: 8px;
+    color: #666;
+    z-index: 100;
+    text-transform: uppercase;
+    pointer-events: none;
+    text-align: center;
+    font-family: sans-serif;
+  }
+  #title b { color: var(--accent); }
+  #counter {
+    position: fixed;
+    top: 20px; right: 20px;
+    font-size: 11px;
+    color: #777;
+    letter-spacing: 2px;
+    z-index: 100;
+    text-align: right;
+    font-family: sans-serif;
+  }
+  #counter b { color: var(--accent); font-size: 22px; display: block; }
+
+  /* ============ 외침 텍스트 ============ */
+  .shout {
+    position: absolute;
+    font-weight: 900;
+    white-space: nowrap;
+    pointer-events: none;
+    text-transform: uppercase;
+    letter-spacing: -2px;
+    transform-origin: center;
+    will-change: transform, opacity, filter;
+    z-index: 10;
+    font-family: var(--font);
+  }
+
+  /* RAGE - 글리치 폭발 */
+  .shout.glitch {
+    text-shadow:
+      0 0 20px currentColor, 0 0 40px currentColor,
+      3px 3px 0 #000, -3px -3px 0 #000;
+    animation: explode var(--dur,2.5s) cubic-bezier(.1,.9,.2,1) forwards;
+  }
+  @keyframes explode {
+    0% { transform: translate(-50%,-50%) scale(0) rotate(var(--rot,0deg)); opacity: 0; filter: blur(30px); }
+    15% { transform: translate(-50%,-50%) scale(1.4) rotate(var(--rot,0deg)); opacity: 1; filter: blur(0); }
+    30% { transform: translate(-50%,-50%) scale(1) rotate(var(--rot,0deg)); }
+    100% {
+      transform: translate(calc(-50% + var(--dx,0px)), calc(-50% + var(--dy,0px)))
+        scale(var(--endscale,3)) rotate(calc(var(--rot,0deg) + var(--spin,180deg)));
+      opacity: 0; filter: blur(10px);
+    }
+  }
+
+  /* BAMBOO - 먹 번짐 */
+  .shout.ink {
+    color: #0a0a0a;
+    text-shadow:
+      0 0 8px rgba(0,0,0,.9),
+      0 0 20px rgba(0,0,0,.6),
+      2px 2px 0 rgba(244,241,232,.3);
+    font-style: italic;
+    animation: inkBleed var(--dur,4s) ease-out forwards;
+  }
+  @keyframes inkBleed {
+    0% { transform: translate(-50%,-50%) scale(0.3); opacity: 0; filter: blur(20px); }
+    20% { transform: translate(-50%,-50%) scale(1); opacity: 1; filter: blur(2px); }
+    60% { transform: translate(-50%,calc(-50% - 100px)) scale(1.1); opacity: 0.7; filter: blur(4px); }
+    100% { transform: translate(-50%,calc(-50% - 300px)) scale(1.4); opacity: 0; filter: blur(15px); }
+  }
+
+  /* CURSE - 떨림 + 뒤집힘 */
+  .shout.tremble {
+    color: var(--accent);
+    text-shadow:
+      0 0 10px #8b0000, 0 0 30px #4a0000,
+      2px 0 0 #2a0000, -2px 0 0 #2a0000;
+    animation: tremble var(--dur,3s) steps(3) forwards;
+  }
+  @keyframes tremble {
+    0% { transform: translate(-50%,-50%) scale(0.5) rotate(180deg); opacity: 0; filter: blur(15px); }
+    10% { transform: translate(-50%,-50%) scale(1) rotate(0deg); opacity: 1; filter: blur(0); }
+    20% { transform: translate(calc(-50% + 4px),-50%) scale(1) rotate(-1deg); }
+    25% { transform: translate(calc(-50% - 4px),calc(-50% + 2px)) scale(1) rotate(1deg); }
+    30% { transform: translate(calc(-50% + 3px),calc(-50% - 2px)) scale(1) rotate(-1deg); }
+    35% { transform: translate(calc(-50% - 3px),-50%) scale(1) rotate(1deg); }
+    50% { transform: translate(-50%,-50%) scale(1.05); opacity: 0.9; }
+    100% { transform: translate(-50%,calc(-50% + 50px)) scale(0.9) rotate(180deg); opacity: 0; filter: blur(20px); }
+  }
+
+  /* SKYDIVE - 위로 빨려 올라감 */
+  .shout.wind {
+    color: #fff;
+    text-shadow:
+      0 0 15px rgba(255,255,255,.9),
+      0 0 30px var(--accent),
+      0 4px 8px rgba(0,0,0,.4);
+    letter-spacing: 4px;
+    animation: windUp var(--dur,2.5s) cubic-bezier(.2,.8,.3,1) forwards;
+  }
+  @keyframes windUp {
+    0% { transform: translate(-50%,-50%) scale(0.4) scaleX(0.3); opacity: 0; filter: blur(20px); }
+    20% { transform: translate(-50%,-50%) scale(1) scaleX(1); opacity: 1; filter: blur(0); }
+    60% { transform: translate(-50%,calc(-50% - 200px)) scale(1.3) scaleX(1.5); opacity: 0.9; filter: blur(2px); }
+    100% { transform: translate(-50%,calc(-50% - 800px)) scale(2) scaleX(3); opacity: 0; filter: blur(15px); }
+  }
+
+  /* NUCLEAR - 메가 폭발 */
+  .shout.mega {
+    color: #fff;
+    text-shadow:
+      0 0 30px #ffaa00, 0 0 60px #ff4400, 0 0 100px #ff0000,
+      4px 4px 0 #000, -4px -4px 0 #000;
+    animation: megaBoom var(--dur,3s) cubic-bezier(.05,.95,.1,1) forwards;
+  }
+  @keyframes megaBoom {
+    0% { transform: translate(-50%,-50%) scale(0); opacity: 0; filter: blur(50px); }
+    8% { transform: translate(-50%,-50%) scale(2); opacity: 1; filter: blur(0); }
+    20% { transform: translate(-50%,-50%) scale(1.4); }
+    100% {
+      transform: translate(calc(-50% + var(--dx,0px)), calc(-50% + var(--dy,0px)))
+        scale(var(--endscale,8)) rotate(var(--spin,90deg));
+      opacity: 0; filter: blur(30px);
+    }
+  }
+
+  /* ============ 흔들림 ============ */
+  @keyframes shake {
+    0%,100% { transform: translate(0,0) rotate(0); }
+    10% { transform: translate(calc(-1 * var(--shake-amp)), calc(0.7 * var(--shake-amp))) rotate(-.5deg); }
+    20% { transform: translate(var(--shake-amp), calc(-0.5 * var(--shake-amp))) rotate(.6deg); }
+    30% { transform: translate(calc(-0.7 * var(--shake-amp)), calc(-1 * var(--shake-amp))) rotate(-.4deg); }
+    40% { transform: translate(calc(0.8 * var(--shake-amp)), calc(0.6 * var(--shake-amp))) rotate(.3deg); }
+    50% { transform: translate(calc(-0.6 * var(--shake-amp)), calc(0.8 * var(--shake-amp))) rotate(-.2deg); }
+    60% { transform: translate(calc(0.7 * var(--shake-amp)), calc(-0.7 * var(--shake-amp))) rotate(.4deg); }
+    70% { transform: translate(calc(-0.8 * var(--shake-amp)), calc(0.4 * var(--shake-amp))) rotate(-.3deg); }
+    80% { transform: translate(calc(0.5 * var(--shake-amp)), calc(-0.6 * var(--shake-amp))) rotate(.2deg); }
+    90% { transform: translate(calc(-0.3 * var(--shake-amp)), calc(0.3 * var(--shake-amp))) rotate(-.1deg); }
+  }
+  body.shaking #stage { animation: shake .5s ease-in-out; }
+
+  /* ============ 플래시 ============ */
+  #flash {
+    position: fixed; inset: 0;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 50;
+  }
+  #flash.on { animation: flash .3s ease-out; }
+  @keyframes flash {
+    0% { opacity: 0; }
+    20% { opacity: .9; }
+    100% { opacity: 0; }
+  }
+
+  /* ============ 파편/이펙트 ============ */
+  .shard, .leaf, .drip, .ring, .ember {
+    position: absolute;
+    pointer-events: none;
+    z-index: 15;
+    will-change: transform, opacity;
+  }
+  .shard {
+    width: 8px; height: 8px;
+  }
+  .leaf {
+    width: 14px; height: 4px;
+    background: #4a7c2a;
+    border-radius: 50%;
+    box-shadow: 0 0 6px rgba(0,0,0,.5);
+  }
+  .drip {
+    width: 6px;
+    background: linear-gradient(180deg, #8b0000 0%, #4a0000 100%);
+    border-radius: 0 0 50% 50%;
+    box-shadow: 0 0 10px #4a0000;
+  }
+  .ring {
+    border: 3px solid var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 40px var(--accent), inset 0 0 40px var(--accent);
+  }
+  .ember {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #ffff00 0%, #ff6600 50%, transparent 100%);
+    box-shadow: 0 0 12px #ff6600;
+  }
+
+  /* CRACK */
+  .crack {
+    position: absolute;
+    pointer-events: none;
+    z-index: 20;
+    width: 300px; height: 300px;
+    background:
+      radial-gradient(circle, transparent 0%, transparent 4%, rgba(255,255,255,.9) 4.5%, transparent 5%),
+      conic-gradient(from 0deg,
+        transparent 0deg, rgba(255,255,255,.8) 2deg, transparent 4deg,
+        transparent 45deg, rgba(255,255,255,.6) 47deg, transparent 49deg,
+        transparent 90deg, rgba(255,255,255,.7) 92deg, transparent 94deg,
+        transparent 135deg, rgba(255,255,255,.5) 137deg, transparent 139deg,
+        transparent 180deg, rgba(255,255,255,.8) 182deg, transparent 184deg,
+        transparent 225deg, rgba(255,255,255,.6) 227deg, transparent 229deg,
+        transparent 270deg, rgba(255,255,255,.7) 272deg, transparent 274deg,
+        transparent 315deg, rgba(255,255,255,.5) 317deg, transparent 319deg);
+    transform: translate(-50%,-50%) rotate(var(--r,0deg));
+    animation: crackFade 1.5s forwards;
+    mix-blend-mode: screen;
+  }
+  @keyframes crackFade {
+    0% { opacity: 0; transform: translate(-50%,-50%) rotate(var(--r,0deg)) scale(.2); }
+    20% { opacity: 1; transform: translate(-50%,-50%) rotate(var(--r,0deg)) scale(1); }
+    100% { opacity: 0; transform: translate(-50%,-50%) rotate(var(--r,0deg)) scale(1.4); }
+  }
+
+  /* RUNE (저주 배경) */
+  .rune {
+    position: absolute;
+    pointer-events: none;
+    font-size: 200px;
+    color: rgba(139,0,0,.15);
+    z-index: 2;
+    font-family: serif;
+    animation: runeFade 4s ease-out forwards;
+  }
+  @keyframes runeFade {
+    0% { opacity: 0; transform: scale(0.5) rotate(0); }
+    30% { opacity: 1; transform: scale(1) rotate(10deg); }
+    100% { opacity: 0; transform: scale(1.5) rotate(20deg); }
+  }
+</style>
+</head>
+<body data-theme="rage">
+  <div id="stage">
+    <div id="sky-layer"></div>
+  </div>
+  <div id="flash"></div>
+
+  <div id="title"><b>■</b> <span id="title-text">조용한 비명실</span> <b>■</b></div>
+
+  <div id="themes">
+    <button data-theme="rage" class="active">🩸 분노</button>
+    <button data-theme="bamboo">🎋 대나무숲</button>
+    <button data-theme="curse">👻 저주</button>
+    <button data-theme="skydive">🪂 스카이다이빙</button>
+    <button data-theme="nuclear">💥 핵폭발</button>
+  </div>
+
+  <div id="counter"><span id="count-label">오늘 터진 비명</span><b id="count">0</b></div>
+
+  <div id="panel">
+    <input id="text" type="text" placeholder="여기에 쏟아내..." maxlength="120" autofocus>
+    <label>크기<input id="size" type="range" min="40" max="400" value="160"></label>
+    <label>색<input id="color" type="color" value="#ff1744"></label>
+    <label>강도<input id="intensity" type="range" min="1" max="20" value="8"></label>
+    <button id="shout">💥 SCREAM</button>
+  </div>
+
+<script>
+const stage = document.getElementById('stage');
+const skyLayer = document.getElementById('sky-layer');
+const input = document.getElementById('text');
+const sizeEl = document.getElementById('size');
+const colorEl = document.getElementById('color');
+const intensityEl = document.getElementById('intensity');
+const shoutBtn = document.getElementById('shout');
+const flash = document.getElementById('flash');
+const countEl = document.getElementById('count');
+const titleText = document.getElementById('title-text');
+const countLabel = document.getElementById('count-label');
+const themeBtns = document.querySelectorAll('#themes button');
+
+const rand = (a,b) => a + Math.random()*(b-a);
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+
+let count = 0;
+let currentTheme = 'rage';
+
+/* ============ 테마 정의 ============ */
+const THEMES = {
+  rage: {
+    title: '조용한 비명실 · SILENT SCREAM',
+    label: '오늘 터진 비명',
+    placeholder: '여기에 쏟아내...',
+    accent: '#ff1744',
+    palette: ['#ff1744','#ff9100','#ffea00','#00e676','#00e5ff','#d500f9','#ff4081','#ffffff'],
+    shoutClass: 'glitch',
+    detonate(text) {
+      const intensity = +intensityEl.value;
+      const size = +sizeEl.value;
+      flashOn();
+      shake();
+      spawnShout(text, {
+        x: innerWidth/2, y: innerHeight/2,
+        size, color: colorEl.value,
+        cls: 'glitch', rot: rand(-8,8), dx:0, dy:0,
+        endscale: 3, dur: 2.8
+      });
+      for (let i=0;i<intensity;i++) setTimeout(()=>{
+        const a = rand(0,Math.PI*2), d = rand(200,700);
+        spawnShout(text, {
+          x: innerWidth/2+Math.cos(a)*rand(0,100),
+          y: innerHeight/2+Math.sin(a)*rand(0,100),
+          size: size*rand(.3,1.1), color: pick(this.palette),
+          cls: 'glitch', rot: rand(-45,45),
+          dx: Math.cos(a)*d, dy: Math.sin(a)*d,
+          endscale: rand(1.5,4), spin: rand(-720,720), dur: rand(1.5,3)
+        });
+      }, i*30);
+      for (let i=0;i<3;i++) spawnCrack(rand(innerWidth*.2,innerWidth*.8), rand(innerHeight*.2,innerHeight*.8));
+      for (let i=0;i<40;i++) spawnShard(innerWidth/2, innerHeight/2, colorEl.value);
+    }
+  },
+
+  bamboo: {
+    title: '대나무숲 · BAMBOO GROVE',
+    label: '바람에 날린 외침',
+    placeholder: '바람에 실어 보내라...',
+    accent: '#4a7c2a',
+    palette: ['#0a0a0a','#1a1a1a','#2d3d1d'],
+    shoutClass: 'ink',
+    detonate(text) {
+      const intensity = +intensityEl.value;
+      const size = +sizeEl.value;
+      shake(0.4);
+      spawnShout(text, {
+        x: innerWidth/2, y: innerHeight*0.6,
+        size, color: '#0a0a0a', cls: 'ink', dur: 4
+      });
+      // 메아리
+      for (let i=1;i<=3;i++) setTimeout(()=>{
+        spawnShout(text, {
+          x: innerWidth/2 + rand(-200,200),
+          y: innerHeight*0.6 + rand(-50,50),
+          size: size*(1-i*0.2), color: '#0a0a0a',
+          cls: 'ink', dur: 4+i
+        });
+      }, i*400);
+      // 댓잎 폭풍
+      for (let i=0;i<intensity*4;i++) setTimeout(()=>spawnLeaf(), i*50);
+    }
+  },
+
+  curse: {
+    title: '저주의 방 · ROOM OF CURSES',
+    label: '걸어둔 저주',
+    placeholder: '저주를 새겨라...',
+    accent: '#8b0000',
+    palette: ['#8b0000','#4a0000','#6a0000','#2a0000'],
+    shoutClass: 'tremble',
+    detonate(text) {
+      const intensity = +intensityEl.value;
+      const size = +sizeEl.value;
+      flashOn();
+      shake(0.6);
+      spawnRune();
+      spawnShout(text, {
+        x: innerWidth/2, y: innerHeight/2,
+        size, color: '#8b0000', cls: 'tremble', dur: 3
+      });
+      // 거꾸로/주변 메아리
+      for (let i=0;i<intensity;i++) setTimeout(()=>{
+        spawnShout(text, {
+          x: rand(innerWidth*.1,innerWidth*.9),
+          y: rand(innerHeight*.1,innerHeight*.85),
+          size: size*rand(.3,.8), color: pick(this.palette),
+          cls: 'tremble', dur: rand(2,3.5)
+        });
+      }, i*150);
+      // 핏물 드립
+      for (let i=0;i<intensity*2;i++) setTimeout(()=>{
+        spawnDrip(rand(0,innerWidth), rand(0, innerHeight*0.3));
+      }, i*80);
+      // 가끔 추가 룬
+      setTimeout(spawnRune, 600);
+    }
+  },
+
+  skydive: {
+    title: '스카이다이빙 · FREE FALL',
+    label: '바람에 흩날린 외침',
+    placeholder: '구름 위로 날려보내...',
+    accent: '#00bfff',
+    palette: ['#ffffff','#00bfff','#87ceeb','#ffea00','#ff69b4'],
+    shoutClass: 'wind',
+    detonate(text) {
+      const intensity = +intensityEl.value;
+      const size = +sizeEl.value;
+      skyBoost();
+      shake(0.3);
+      spawnShout(text, {
+        x: innerWidth/2, y: innerHeight*0.6,
+        size, color: '#fff', cls: 'wind', dur: 2.8
+      });
+      for (let i=0;i<intensity;i++) setTimeout(()=>{
+        spawnShout(text, {
+          x: rand(innerWidth*.2,innerWidth*.8),
+          y: rand(innerHeight*.4,innerHeight*.8),
+          size: size*rand(.4,.9), color: pick(this.palette),
+          cls: 'wind', dur: rand(2,3.5)
+        });
+      }, i*60);
+      // 폭풍 구름 추가
+      for (let i=0;i<intensity*2;i++) spawnBoostCloud();
+    }
+  },
+
+  nuclear: {
+    title: '핵폭발 · NUCLEAR DETONATION',
+    label: '터뜨린 폭탄',
+    placeholder: '기폭하라...',
+    accent: '#ffaa00',
+    palette: ['#ffffff','#ffea00','#ff9100','#ff1744','#ff6600'],
+    shoutClass: 'mega',
+    detonate(text) {
+      const intensity = +intensityEl.value;
+      const size = +sizeEl.value;
+      // 거대 플래시
+      flashOn();
+      setTimeout(flashOn, 100);
+      shake(1);
+      // 충격파 링
+      for (let i=0;i<5;i++) setTimeout(()=>spawnRing(innerWidth/2,innerHeight/2), i*120);
+      // 메가 텍스트
+      spawnShout(text, {
+        x: innerWidth/2, y: innerHeight/2,
+        size: size*1.5, color: '#fff', cls: 'mega',
+        dx:0, dy:0, endscale: 10, spin: 0, dur: 3
+      });
+      // 사방으로 복제
+      for (let i=0;i<intensity*2;i++) setTimeout(()=>{
+        const a = rand(0,Math.PI*2), d = rand(400,1200);
+        spawnShout(text, {
+          x: innerWidth/2, y: innerHeight/2,
+          size: size*rand(.4,1.2), color: pick(this.palette),
+          cls: 'mega', dx: Math.cos(a)*d, dy: Math.sin(a)*d,
+          endscale: rand(3,8), spin: rand(-360,360), dur: rand(2,3.5)
+        });
+      }, i*40);
+      // 불꽃 파편
+      for (let i=0;i<80;i++) spawnEmber(innerWidth/2, innerHeight/2);
+    }
+  }
+};
+
+/* ============ 헬퍼 ============ */
+function flashOn() {
+  flash.classList.remove('on');
+  void flash.offsetWidth;
+  flash.classList.add('on');
+}
+function shake(mult=1) {
+  document.body.classList.remove('shaking');
+  void document.body.offsetWidth;
+  document.documentElement.style.setProperty('--shake-amp',
+    (parseFloat(getComputedStyle(document.body).getPropertyValue('--shake-amp'))*mult)+'px');
+  document.body.classList.add('shaking');
+  setTimeout(()=>document.body.classList.remove('shaking'), 600);
+}
+
+function spawnShout(text, opt) {
+  const el = document.createElement('div');
+  el.className = 'shout ' + (opt.cls || '');
+  el.textContent = text;
+  el.style.left = opt.x + 'px';
+  el.style.top = opt.y + 'px';
+  el.style.fontSize = opt.size + 'px';
+  if (opt.color) el.style.color = opt.color;
+  el.style.setProperty('--rot', (opt.rot||0) + 'deg');
+  el.style.setProperty('--dx', (opt.dx||0) + 'px');
+  el.style.setProperty('--dy', (opt.dy||0) + 'px');
+  el.style.setProperty('--endscale', opt.endscale||3);
+  el.style.setProperty('--spin', (opt.spin||180) + 'deg');
+  el.style.setProperty('--dur', (opt.dur||2.5) + 's');
+  stage.appendChild(el);
+  setTimeout(()=>el.remove(), (opt.dur||2.5)*1000+200);
+}
+
+function spawnCrack(x,y) {
+  const el = document.createElement('div');
+  el.className = 'crack';
+  el.style.left = x+'px'; el.style.top = y+'px';
+  el.style.setProperty('--r', rand(0,360)+'deg');
+  stage.appendChild(el);
+  setTimeout(()=>el.remove(),1600);
+}
+
+function spawnShard(x,y,color) {
+  const el = document.createElement('div');
+  el.className = 'shard';
+  el.style.left=x+'px'; el.style.top=y+'px';
+  el.style.background = Math.random()>.5?color:'#fff';
+  el.style.borderRadius = Math.random()>.7?'50%':'0';
+  const w = rand(4,14);
+  el.style.width = w+'px'; el.style.height = w+'px';
+  el.style.boxShadow = `0 0 ${w*2}px ${color}`;
+  stage.appendChild(el);
+  const a = rand(0,Math.PI*2), s = rand(400,1200);
+  el.animate([
+    { transform:'translate(0,0) rotate(0)', opacity:1 },
+    { transform:`translate(${Math.cos(a)*s}px,${Math.sin(a)*s}px) rotate(${rand(-720,720)}deg)`, opacity:0 }
+  ], { duration: rand(800,1600), easing:'cubic-bezier(.1,.7,.3,1)' });
+  setTimeout(()=>el.remove(),1700);
+}
+
+function spawnLeaf() {
+  const el = document.createElement('div');
+  el.className = 'leaf';
+  const startX = rand(-50, innerWidth+50);
+  const startY = -20;
+  el.style.left = startX+'px'; el.style.top = startY+'px';
+  el.style.background = pick(['#4a7c2a','#5a8c3a','#3a6c1a','#6a9c4a']);
+  stage.appendChild(el);
+  const drift = rand(-200,200);
+  const dur = rand(3000,6000);
+  el.animate([
+    { transform:'translate(0,0) rotate(0)', opacity:0 },
+    { transform:`translate(${drift*0.3}px, ${innerHeight*0.3}px) rotate(180deg)`, opacity:1, offset:0.2 },
+    { transform:`translate(${drift}px, ${innerHeight+50}px) rotate(720deg)`, opacity:0 }
+  ], { duration: dur, easing:'linear' });
+  setTimeout(()=>el.remove(), dur);
+}
+
+function spawnDrip(x,y) {
+  const el = document.createElement('div');
+  el.className = 'drip';
+  el.style.left = x+'px'; el.style.top = y+'px';
+  el.style.height = '10px';
+  stage.appendChild(el);
+  const fallDur = rand(1500,3000);
+  const len = rand(80,250);
+  el.animate([
+    { height: '10px', opacity:1 },
+    { height: len+'px', opacity:1, offset:0.7 },
+    { height: len+'px', opacity:0 }
+  ], { duration: fallDur, easing:'cubic-bezier(.4,0,.7,1)' });
+  setTimeout(()=>el.remove(), fallDur);
+}
+
+function spawnRune() {
+  const el = document.createElement('div');
+  el.className = 'rune';
+  el.textContent = pick(['呪','死','怨','痛','怒','恨','滅','咒','厄','凶']);
+  el.style.left = rand(10,innerWidth-200)+'px';
+  el.style.top = rand(10,innerHeight-200)+'px';
+  stage.appendChild(el);
+  setTimeout(()=>el.remove(), 4000);
+}
+
+function spawnRing(x,y) {
+  const el = document.createElement('div');
+  el.className = 'ring';
+  el.style.left = x+'px'; el.style.top = y+'px';
+  el.style.width = '20px'; el.style.height = '20px';
+  el.style.transform = 'translate(-50%,-50%)';
+  stage.appendChild(el);
+  el.animate([
+    { width:'20px', height:'20px', opacity:1, borderWidth:'8px' },
+    { width:'2400px', height:'2400px', opacity:0, borderWidth:'1px' }
+  ], { duration:1500, easing:'cubic-bezier(.1,.8,.2,1)' });
+  setTimeout(()=>el.remove(),1500);
+}
+
+function spawnEmber(x,y) {
+  const el = document.createElement('div');
+  el.className = 'ember';
+  el.style.left = x+'px'; el.style.top = y+'px';
+  stage.appendChild(el);
+  const a = rand(0,Math.PI*2), s = rand(300,1400);
+  const dur = rand(1000,2500);
+  el.animate([
+    { transform:'translate(0,0) scale(1)', opacity:1 },
+    { transform:`translate(${Math.cos(a)*s}px,${Math.sin(a)*s + dur*0.3}px) scale(0.2)`, opacity:0 }
+  ], { duration: dur, easing:'cubic-bezier(.2,.8,.6,1)' });
+  setTimeout(()=>el.remove(), dur);
+}
+
+/* ============ 스카이다이빙 ============ */
+let skyClouds = [];
+let skySpeed = 1;
+let skyAnimRunning = false;
+
+function initSky() {
+  skyLayer.innerHTML = '';
+  skyClouds = [];
+  for (let i=0;i<15;i++) {
+    const c = document.createElement('div');
+    c.className = 'cloud';
+    const w = rand(150,400);
+    c.style.width = w+'px';
+    c.style.height = w*0.5+'px';
+    c.style.left = rand(-100, innerWidth)+'px';
+    const y = rand(-200, innerHeight+200);
+    c.style.top = y+'px';
+    c.dataset.y = y;
+    c.dataset.speed = rand(2,6);
+    skyLayer.appendChild(c);
+    skyClouds.push(c);
+  }
+  if (!skyAnimRunning) {
+    skyAnimRunning = true;
+    requestAnimationFrame(skyTick);
+  }
+}
+
+function skyTick() {
+  if (currentTheme === 'skydive') {
+    skyClouds.forEach(c => {
+      let y = parseFloat(c.dataset.y) - parseFloat(c.dataset.speed)*skySpeed;
+      if (y < -300) {
+        y = innerHeight + 50;
+        c.style.left = rand(-100, innerWidth)+'px';
+      }
+      c.dataset.y = y;
+      c.style.top = y+'px';
+    });
+    if (skySpeed > 1) skySpeed = Math.max(1, skySpeed - 0.15);
+  }
+  requestAnimationFrame(skyTick);
+}
+
+function skyBoost() {
+  skySpeed = 12;
+}
+
+function spawnBoostCloud() {
+  const c = document.createElement('div');
+  c.className = 'cloud';
+  const w = rand(200,500);
+  c.style.width = w+'px';
+  c.style.height = w*0.5+'px';
+  c.style.left = rand(-100, innerWidth)+'px';
+  c.style.top = (innerHeight+100)+'px';
+  skyLayer.appendChild(c);
+  c.animate([
+    { transform:'translateY(0)', opacity:0 },
+    { transform:'translateY(-200px)', opacity:1, offset:0.2 },
+    { transform:`translateY(-${innerHeight+400}px)`, opacity:0 }
+  ], { duration: rand(1500,3000), easing:'cubic-bezier(.2,.8,.4,1)' });
+  setTimeout(()=>c.remove(), 3000);
+}
+
+/* ============ 5초 드라마틱 브로드캐스트 ============ */
+// 다른 사용자(혹은 본인)가 서버를 거쳐 들어온 외침은 5초간 다단계 연출로 표현
+function broadcastDetonate(text) {
+  const cx = innerWidth/2, cy = innerHeight/2;
+  const t = THEMES[currentTheme];
+  const palette = t.palette;
+  const accent = t.accent;
+
+  // ── PHASE 0 (0.0s) : 빨려 들어오며 등장
+  flashOn();
+  shake(0.8);
+  spawnShout(text, {
+    x: cx, y: cy, size: 240, color: '#fff',
+    cls: 'glitch', rot: 0, dx:0, dy:0, endscale: 1.2, spin: 0, dur: 0.7
+  });
+
+  // ── PHASE 1 (0.4s) : RGB 글리치 분열 (3겹 오프셋)
+  setTimeout(()=>{
+    const offsets = [
+      { c:'#ff003c', dx:-10 },
+      { c:'#00fff0', dx:10 },
+      { c:'#ffffff', dx:0 }
+    ];
+    offsets.forEach(o=>{
+      spawnShout(text, {
+        x: cx + o.dx, y: cy, size: 220, color: o.c,
+        cls: 'glitch', rot: rand(-2,2), dx:0, dy:0,
+        endscale: 1, spin: 0, dur: 0.9
+      });
+    });
+    shake(0.5);
+  }, 400);
+
+  // ── PHASE 2 (1.0s) : 사방에서 날아옴 (4면 + 4코너)
+  setTimeout(()=>{
+    flashOn();
+    const sides = [
+      { x:-200, y:cy }, { x:innerWidth+200, y:cy },
+      { x:cx, y:-200 }, { x:cx, y:innerHeight+200 },
+      { x:-200, y:-200 }, { x:innerWidth+200, y:-200 },
+      { x:-200, y:innerHeight+200 }, { x:innerWidth+200, y:innerHeight+200 }
+    ];
+    sides.forEach(s=>{
+      spawnShout(text, {
+        x: s.x, y: s.y, size: rand(100,180),
+        color: pick(palette), cls: 'glitch',
+        rot: rand(-25,25),
+        dx: cx - s.x + rand(-80,80),
+        dy: cy - s.y + rand(-80,80),
+        endscale: rand(0.4, 1.2), spin: rand(-360,360), dur: 1.1
+      });
+    });
+  }, 1000);
+
+  // ── PHASE 3 (1.8s) : 폰트 사이즈가 들쭉날쭉 무작위 등장
+  setTimeout(()=>{
+    for (let i=0;i<14;i++) setTimeout(()=>{
+      spawnShout(text, {
+        x: rand(0, innerWidth), y: rand(0, innerHeight),
+        size: rand(40, 260), color: pick(palette),
+        cls: 'glitch', rot: rand(-40,40),
+        dx: rand(-180,180), dy: rand(-180,180),
+        endscale: rand(0.8, 3), spin: rand(-540,540), dur: rand(0.9, 1.4)
+      });
+    }, i*45);
+  }, 1800);
+
+  // ── PHASE 4 (2.8s) : 좌→우 / 우→좌 흐르는 트레일
+  setTimeout(()=>{
+    const dir = Math.random() > 0.5 ? 1 : -1;
+    for (let i=0;i<12;i++) setTimeout(()=>{
+      const startX = dir > 0 ? -150 : innerWidth+150;
+      const sy = rand(innerHeight*0.15, innerHeight*0.85);
+      spawnShout(text, {
+        x: startX, y: sy, size: rand(60, 160),
+        color: pick(palette), cls: 'glitch',
+        rot: rand(-10,10),
+        dx: dir * (innerWidth + 300),
+        dy: rand(-60,60),
+        endscale: rand(1, 1.8), spin: 0, dur: 1.0
+      });
+    }, i*45);
+    shake(0.4);
+  }, 2800);
+
+  // ── PHASE 5 (3.8s) : 화면 깨짐 + 최후의 폭발
+  setTimeout(()=>{
+    flashOn();
+    shake(1.2);
+    // 거대 중앙
+    spawnShout(text, {
+      x: cx, y: cy, size: 320, color: '#fff',
+      cls: 'glitch', rot: 0, dx:0, dy:0,
+      endscale: 5, spin: 360, dur: 1.2
+    });
+    // 사방 폭발
+    for (let i=0;i<24;i++) {
+      const a = (i/24) * Math.PI*2;
+      spawnShout(text, {
+        x: cx, y: cy, size: rand(40, 140),
+        color: pick(palette), cls: 'glitch',
+        rot: rand(-180,180),
+        dx: Math.cos(a) * rand(500, 1100),
+        dy: Math.sin(a) * rand(500, 1100),
+        endscale: rand(0.6, 2.5), spin: rand(-720,720), dur: 1.2
+      });
+    }
+    // 크랙 + 파편
+    for (let i=0;i<5;i++) spawnCrack(
+      rand(innerWidth*0.15, innerWidth*0.85),
+      rand(innerHeight*0.15, innerHeight*0.85)
+    );
+    for (let i=0;i<70;i++) spawnShard(cx, cy, pick(palette));
+  }, 3800);
+}
+
+/* ============ 수신 큐 (산발적 표시) ============ */
+const incomingQueue = [];
+let queueRunning = false;
+function enqueueIncoming(text) {
+  incomingQueue.push(text);
+  if (!queueRunning) drainQueue();
+}
+function drainQueue() {
+  if (incomingQueue.length === 0) { queueRunning = false; return; }
+  queueRunning = true;
+  const text = incomingQueue.shift();
+  broadcastDetonate(text);
+  count++;
+  countEl.textContent = count;
+  // 다음 외침은 0.6~2.0초 사이 랜덤 딜레이로 — 산발적 느낌
+  const next = rand(600, 2000);
+  setTimeout(drainQueue, next);
+}
+
+/* ============ SSE 연결 ============ */
+const seenIds = new Set();
+let sinceTs = Date.now();
+let es = null;
+function connectStream() {
+  try { if (es) es.close(); } catch {}
+  es = new EventSource(`/api/stream?since=${sinceTs}`);
+  es.onmessage = (e) => {
+    try {
+      const obj = JSON.parse(e.data);
+      if (!obj || !obj.id || seenIds.has(obj.id)) return;
+      seenIds.add(obj.id);
+      if (typeof obj.ts === 'number' && obj.ts > sinceTs) sinceTs = obj.ts;
+      enqueueIncoming(obj.text);
+    } catch {}
+  };
+  es.onerror = () => {
+    try { es.close(); } catch {}
+    setTimeout(connectStream, 2000);
+  };
+}
+// SSE 시작 (api 없는 로컬 환경에서도 에러만 나고 동작은 함)
+connectStream();
+
+/* ============ 메인 ============ */
+async function go() {
+  let text = input.value.trim();
+  if (!text) text = pick(['!!!','AAAAH','XXXX','...','으아아악']);
+  input.value = '';
+  input.focus();
+
+  // 로컬 즉각 피드백 (테마별 이펙트)
+  THEMES[currentTheme].detonate(text);
+
+  // 서버로 전송 (실패해도 무시 — 로컬은 이미 떴음)
+  try {
+    const res = await fetch('/api/shout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      // 자기 자신이 SSE로 다시 받아서 5초 연출 또 트는 걸 막음
+      if (data && data.id) seenIds.add(data.id);
+    }
+  } catch (e) {
+    // offline / no api — 무시
+  }
+}
+
+function setTheme(name) {
+  currentTheme = name;
+  document.body.dataset.theme = name;
+  const t = THEMES[name];
+  titleText.textContent = t.title;
+  countLabel.textContent = t.label;
+  input.placeholder = t.placeholder;
+  colorEl.value = t.accent;
+  themeBtns.forEach(b => b.classList.toggle('active', b.dataset.theme===name));
+  if (name === 'skydive') initSky();
+  else { skyLayer.innerHTML=''; skyClouds=[]; }
+}
+
+themeBtns.forEach(b => b.addEventListener('click', ()=>setTheme(b.dataset.theme)));
+
+shoutBtn.addEventListener('click', go);
+input.addEventListener('keydown', e => { if (e.key==='Enter') go(); });
+
+stage.addEventListener('click', e => {
+  if (e.target.closest('#panel,#themes')) return;
+  const txt = input.value.trim() || pick(['!','XXX','...']);
+  const t = THEMES[currentTheme];
+  spawnShout(txt, {
+    x: e.clientX, y: e.clientY,
+    size: +sizeEl.value*0.6,
+    color: pick(t.palette),
+    cls: t.shoutClass, rot: rand(-20,20),
+    dx: rand(-200,200), dy: rand(-200,200),
+    endscale: 2, dur: 2
+  });
+});
+
+// 인트로
+setTimeout(()=>{
+  spawnShout('소리질러', {
+    x: innerWidth/2, y: innerHeight/2,
+    size: 120, color: '#ff1744',
+    cls: 'glitch', rot: -3, dx:0, dy:0, endscale:2, dur:2.5
+  });
+}, 300);
+</script>
+</body>
+</html>
