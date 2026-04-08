@@ -109,6 +109,39 @@
   #text::placeholder { color: rgba(255,255,255,.3); }
   #text:focus { border-bottom-color: rgba(255,255,255,.6); }
 
+  /* ============ 큐 미리보기 (우측 하단) ============ */
+  #queue-preview {
+    position: fixed;
+    right: 16px;
+    bottom: 14px;
+    z-index: 100;
+    font-family: sans-serif;
+    font-size: 11px;
+    color: rgba(255,255,255,.35);
+    text-align: right;
+    letter-spacing: 0.5px;
+    pointer-events: none;
+    line-height: 1.6;
+    max-width: 280px;
+  }
+  #queue-preview .label {
+    color: rgba(255,255,255,.25);
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  #queue-preview .item {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  #queue-preview .item:nth-child(2) { color: rgba(255,255,255,.55); }
+  #queue-preview .item:nth-child(3) { color: rgba(255,255,255,.4); }
+  #queue-preview .item:nth-child(4) { color: rgba(255,255,255,.3); }
+  #queue-preview .item:nth-child(5) { color: rgba(255,255,255,.22); }
+  #queue-preview .item:nth-child(6) { color: rgba(255,255,255,.15); }
+
   /* ============ 카운터 (좌측 상단) ============ */
   #counter {
     position: fixed;
@@ -418,6 +451,7 @@
   </div>
 
   <div id="counter"><span id="count">0</span></div>
+  <div id="queue-preview"></div>
 
   <input id="text" type="text" maxlength="120" autofocus>
 
@@ -983,46 +1017,67 @@ function broadcastDetonate(text) {
   }, 3800);
 }
 
-/* ============ 수신 큐 (산발적 표시) ============ */
-const incomingQueue = [];
+/* ============ 통합 큐 (로컬 + 원격 동일 경로) ============ */
+// 모든 외침은 무조건 큐를 통과해서 한 번에 하나씩, 현재 연출이 끝날 때까지 대기
+const CLIENT_ID = Math.random().toString(36).slice(2) + Date.now().toString(36);
+const THEME_DURATION = { curse: 4200, execute: 5200, rage: 3200, nuclear: 6200 };
+const QUEUE_GAP = 250; // 연출 사이 짧은 정적
+
+const shoutQueue = [];
 let queueRunning = false;
-function enqueueIncoming(text) {
-  incomingQueue.push(text);
+const queuePreviewEl = document.getElementById('queue-preview');
+function renderQueuePreview() {
+  if (shoutQueue.length === 0) { queuePreviewEl.innerHTML = ''; return; }
+  const items = shoutQueue.slice(0, 5);
+  queuePreviewEl.innerHTML =
+    '<div class="label">NEXT</div>' +
+    items.map(t => `<div class="item">${escapeHtml(t)}</div>`).join('');
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function enqueueShout(text) {
+  shoutQueue.push(text);
+  renderQueuePreview();
   if (!queueRunning) drainQueue();
 }
 function drainQueue() {
-  if (incomingQueue.length === 0) { queueRunning = false; return; }
+  if (shoutQueue.length === 0) { queueRunning = false; renderQueuePreview(); return; }
   queueRunning = true;
-  const text = incomingQueue.shift();
+  const text = shoutQueue.shift();
+  renderQueuePreview();
   THEMES[currentTheme].detonate(text);
   count++;
   countEl.textContent = count;
-  // 다음 외침은 0.6~2.0초 사이 랜덤 딜레이로 — 산발적 느낌
-  const next = rand(600, 2000);
-  setTimeout(drainQueue, next);
+  const wait = (THEME_DURATION[currentTheme] || 4000) + QUEUE_GAP;
+  setTimeout(drainQueue, wait);
 }
 
 /* ============ SSE 연결 (테마=방) ============ */
 let seenIds = new Set();
 let sinceTs = Date.now();
 let es = null;
-let streamRoom = null;
 let reconnectTimer = null;
 
 function connectStream() {
   try { if (es) es.close(); } catch {}
   if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
-  streamRoom = currentTheme;
-  es = new EventSource(`/api/stream?room=${streamRoom}&since=${sinceTs}`);
+  es = new EventSource(`/api/stream?room=${currentTheme}&since=${sinceTs}`);
   es.onmessage = (e) => {
     try {
       const obj = JSON.parse(e.data);
       if (!obj || !obj.id || seenIds.has(obj.id)) return;
-      // 방이 바뀌었으면 무시
+      // 방 검증
       if (obj.room && obj.room !== currentTheme) return;
+      // 자기 자신이 보낸 건 스킵 (이미 로컬 큐에 들어가 있음)
+      if (obj.clientId && obj.clientId === CLIENT_ID) {
+        seenIds.add(obj.id);
+        if (typeof obj.ts === 'number' && obj.ts > sinceTs) sinceTs = obj.ts;
+        return;
+      }
       seenIds.add(obj.id);
       if (typeof obj.ts === 'number' && obj.ts > sinceTs) sinceTs = obj.ts;
-      enqueueIncoming(obj.text);
+      enqueueShout(obj.text);
     } catch {}
   };
   es.onerror = () => {
@@ -1032,9 +1087,9 @@ function connectStream() {
 }
 
 function switchRoom() {
-  // 방 전환 시 큐/seen 초기화 + 새 방으로 SSE 재연결
-  incomingQueue.length = 0;
+  shoutQueue.length = 0;
   queueRunning = false;
+  renderQueuePreview();
   seenIds = new Set();
   sinceTs = Date.now();
   connectStream();
@@ -1043,32 +1098,21 @@ function switchRoom() {
 connectStream();
 
 /* ============ 메인 ============ */
-async function go() {
+function go() {
   let text = input.value.trim();
   if (!text) text = pick(['!!!','AAAAH','XXXX','...','으아아악']);
   input.value = '';
   input.focus();
 
-  // 로컬 즉각 피드백 (테마별 이펙트)
-  THEMES[currentTheme].detonate(text);
-  count++;
-  countEl.textContent = count;
+  // 로컬도 큐로 — 즉시 발동 안 함, 순차 처리
+  enqueueShout(text);
 
-  // 서버로 전송 (실패해도 무시 — 로컬은 이미 떴음)
-  try {
-    const res = await fetch('/api/shout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, room: currentTheme })
-    });
-    if (res.ok) {
-      const data = await res.json();
-      // 자기 자신이 SSE로 다시 받아서 5초 연출 또 트는 걸 막음
-      if (data && data.id) seenIds.add(data.id);
-    }
-  } catch (e) {
-    // offline / no api — 무시
-  }
+  // 서버로 전송 (백그라운드)
+  fetch('/api/shout', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text, room: currentTheme, clientId: CLIENT_ID })
+  }).catch(()=>{});
 }
 
 function setTheme(name) {
