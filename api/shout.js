@@ -5,7 +5,7 @@ const redis = new Redis({
   token: process.env.UPSTASH_REDIS_KV_REST_API_TOKEN,
 });
 const MAX_LEN = 200;
-const ROOMS = new Set(['rage','curse','nuclear','execute']);
+const ROOMS = new Set(['rage','curse','nuclear','execute','bear','press']);
 const feedKey = (room) => `shouts:${room}`;
 
 export default async function handler(req, res) {

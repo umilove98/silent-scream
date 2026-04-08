@@ -48,6 +48,81 @@
     --font: 'Impact','Arial Black','Malgun Gothic',sans-serif;
     --shake-amp: 18px;
   }
+  body[data-theme="press"] {
+    --bg: #141416;
+    --ink: #fff; --accent: #ffd400;
+    --font: 'Impact','Arial Black','Malgun Gothic',sans-serif;
+    --shake-amp: 16px;
+  }
+  body[data-theme="press"] #stage::before {
+    background:
+      repeating-linear-gradient(90deg, rgba(255,212,0,.05) 0 60px, transparent 60px 120px),
+      radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,.85) 100%);
+  }
+
+  /* PRESS — 유압 프레스 상하판 */
+  .press-plate {
+    position: fixed;
+    left: 0; right: 0;
+    height: 50vh;
+    background:
+      linear-gradient(180deg, #2a2a2e 0%, #1a1a1c 50%, #0a0a0c 100%);
+    border: 4px solid #555;
+    box-shadow: 0 0 60px rgba(0,0,0,.9), inset 0 0 40px rgba(0,0,0,.6);
+    z-index: 26;
+    pointer-events: none;
+    will-change: transform;
+  }
+  .press-plate.top {
+    top: 0;
+    transform: translateY(-100%);
+    border-bottom: 8px solid #ffd400;
+    background-image:
+      repeating-linear-gradient(45deg, rgba(255,212,0,.15) 0 12px, transparent 12px 24px),
+      linear-gradient(180deg, #2a2a2e 0%, #1a1a1c 50%, #0a0a0c 100%);
+  }
+  .press-plate.bot {
+    bottom: 0;
+    transform: translateY(100%);
+    border-top: 8px solid #ffd400;
+    background-image:
+      repeating-linear-gradient(45deg, rgba(255,212,0,.15) 0 12px, transparent 12px 24px),
+      linear-gradient(0deg, #2a2a2e 0%, #1a1a1c 50%, #0a0a0c 100%);
+  }
+  .press-warning-stripe {
+    position: fixed;
+    left: 0; right: 0;
+    height: 16px;
+    background: repeating-linear-gradient(45deg, #ffd400 0 14px, #000 14px 28px);
+    z-index: 27;
+    pointer-events: none;
+    opacity: 0;
+  }
+  .press-warning-stripe.top { top: 0; }
+  .press-warning-stripe.bot { bottom: 0; }
+
+  /* CHAINSAW — 처형 랜덤 이벤트용 */
+  .chainsaw {
+    position: absolute;
+    pointer-events: none;
+    z-index: 29;
+    font-size: 280px;
+    line-height: 1;
+    will-change: transform;
+    filter: drop-shadow(0 0 30px rgba(255,180,0,.8));
+  }
+
+  body[data-theme="bear"] {
+    --bg: #0a1420;
+    --ink: #fff; --accent: #ffffff;
+    --font: 'Impact','Arial Black','Malgun Gothic',sans-serif;
+    --shake-amp: 14px;
+  }
+  body[data-theme="bear"] #stage::before {
+    background:
+      repeating-linear-gradient(120deg, rgba(255,255,255,.04) 0 2px, transparent 2px 80px),
+      radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,.85) 100%);
+  }
 
   /* ============ 스테이지 ============ */
   #stage {
@@ -322,6 +397,54 @@
   /* 히트 스톱 — 모든 애니메이션 일시 정지 */
   body.hit-stop * { animation-play-state: paused !important; }
 
+  /* BEAR — 발톱 자국, 곰, 효과음 */
+  .claw-slash {
+    position: absolute;
+    pointer-events: none;
+    z-index: 28;
+    height: 14px;
+    background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(255,255,255,.95) 8%,
+      rgba(255,255,255,1) 15%,
+      transparent 18%,
+      rgba(255,255,255,1) 22%,
+      transparent 25%,
+      rgba(255,255,255,1) 30%,
+      transparent 33%,
+      rgba(255,255,255,1) 38%,
+      transparent 42%,
+      transparent 100%);
+    box-shadow: 0 0 24px rgba(255,255,255,.9), 0 0 60px rgba(150,200,255,.6);
+    transform-origin: 0% 50%;
+    will-change: transform, opacity;
+    border-radius: 8px;
+  }
+  .bear-mark {
+    position: absolute;
+    pointer-events: none;
+    z-index: 27;
+    font-size: 200px;
+    line-height: 1;
+    will-change: transform, opacity;
+    filter: drop-shadow(0 0 30px rgba(255,255,255,.8));
+  }
+  .sfx {
+    position: absolute;
+    pointer-events: none;
+    z-index: 32;
+    font-family: var(--font);
+    font-weight: 900;
+    color: #fff;
+    -webkit-text-stroke: 4px #000;
+    text-shadow:
+      0 0 20px #fff,
+      6px 6px 0 #000,
+      -6px -6px 0 #000,
+      0 8px 0 #000;
+    will-change: transform, opacity;
+  }
+
   /* 글자 가루(파편) — 부서진 글자조각이 사방으로 흩어짐 */
   .dust {
     position: absolute;
@@ -446,6 +569,8 @@
   <div id="themes">
     <button data-theme="curse" class="active">저주</button>
     <button data-theme="execute">처형</button>
+    <button data-theme="bear">북극곰</button>
+    <button data-theme="press">유압프레스</button>
     <button data-theme="rage">격노</button>
     <button data-theme="nuclear">핵폭발</button>
   </div>
@@ -555,6 +680,8 @@ const THEMES = {
       const chars = Array.from(text);
       const perChar = 110; // 한 글자당 ms
       const typeDur = chars.length * perChar;
+      // 1/6 확률로 체인소맨 난입
+      const chainsawEvent = Math.random() < 1/6;
 
       // 작은 "처형." 라벨 (대상 위)
       const label = document.createElement('div');
@@ -581,6 +708,20 @@ const THEMES = {
       const lockHold = 250;
       const weaponDur = 800;
       const impactAt = typeDur + lockHold + weaponDur;
+
+      if (chainsawEvent) {
+        // 체인소맨 난입 — 라벨을 "체인소맨." 으로 바꾸고 곰톱 들어옴
+        setTimeout(()=>{
+          label.textContent = '체인소맨.';
+          label.style.color = '#ffaa00';
+          label.style.textShadow = '0 0 8px #ff6600,2px 2px 0 #000';
+          target.remove();
+          spawnChainsaw(text);
+          // 갈려나가는 동안 라벨도 같이 사라짐
+          setTimeout(()=>label.remove(), 1700);
+        }, typeDur + lockHold);
+        return;
+      }
 
       // 무기 진입
       const weapon = pick(WEAPONS);
@@ -634,6 +775,113 @@ const THEMES = {
         for (let i=0;i<60;i++) spawnEmber(innerWidth/2, innerHeight/2);
         spawnShatter(text);
       }, 4750);
+    }
+  },
+
+  press: {
+    title: '유압프레스 · HYDRAULIC PRESS',
+    label: '으깬 횟수',
+    accent: '#ffd400',
+    palette: ['#ffd400','#ffffff','#888888','#000000'],
+    shoutClass: 'verdict',
+    detonate(text) {
+      const cx = innerWidth/2, cy = innerHeight/2;
+
+      // 0.0s : 대상 텍스트 등장
+      const target = document.createElement('div');
+      target.style.cssText = `position:absolute;left:${cx}px;top:${cy}px;transform:translate(-50%,-50%);font-family:var(--font);font-size:200px;color:#fff;font-weight:900;z-index:30;letter-spacing:-2px;white-space:nowrap;text-shadow:0 0 12px #ffd400,4px 4px 0 #000,-4px -4px 0 #000;`;
+      target.textContent = text;
+      stage.appendChild(target);
+      shake(0.4);
+
+      // 0.2s : 프레스 강하 시작 (1.6s 후 임팩트)
+      const impactAt = 1800;
+      setTimeout(()=>spawnPress(impactAt - 200, 500), 200);
+
+      // 강하 중 흔들림 빌드업
+      setTimeout(()=>shake(0.6), 600);
+      setTimeout(()=>shake(0.9), 1100);
+      setTimeout(()=>shake(1.3), 1500);
+
+      // 임팩트 — 텍스트 짜부라뜨림
+      setTimeout(()=>{
+        // 텍스트가 위아래로 압착됨
+        target.animate([
+          { transform: 'translate(-50%,-50%) scaleY(1) scaleX(1)' },
+          { transform: 'translate(-50%,-50%) scaleY(0.05) scaleX(1.4)', offset: 0.7 },
+          { transform: 'translate(-50%,-50%) scaleY(0) scaleX(1.6)' }
+        ], { duration: 220, easing: 'cubic-bezier(.6,0,.9,.4)', fill: 'forwards' });
+
+        flashOn();
+        zoomPunch();
+        shake(2.5);
+        spawnImpactLines(cx, cy, 20);
+        hitStop(150);
+
+        // 압착된 잔해 — 가루 + 핏물 약간
+        setTimeout(()=>{
+          target.remove();
+          spawnShatter(text);
+          for (let i=0;i<30;i++) spawnEmber(cx, cy);
+        }, 250);
+      }, impactAt);
+    }
+  },
+
+  bear: {
+    title: '북극곰의 분노 · POLAR BEAR RAGE',
+    label: '찢긴 외침',
+    accent: '#ffffff',
+    palette: ['#ffffff','#cfe6ff','#88b8ff','#ffd0d0'],
+    shoutClass: 'verdict',
+    detonate(text) {
+      const cx = innerWidth/2, cy = innerHeight/2;
+
+      // 0.0s : 대상 텍스트 등장
+      const target = document.createElement('div');
+      target.style.cssText = `position:absolute;left:${cx}px;top:${cy}px;transform:translate(-50%,-50%);font-family:var(--font);font-size:200px;color:#fff;font-weight:900;z-index:30;letter-spacing:-2px;white-space:nowrap;text-shadow:0 0 20px #88b8ff,4px 4px 0 #000,-4px -4px 0 #000;`;
+      target.textContent = text;
+      stage.appendChild(target);
+      shake(0.3);
+
+      // 0.5s : 첫 번째 발톱 슬래시 (좌상→우하)
+      setTimeout(()=>{
+        spawnClawSlash(20, cx, cy);
+        spawnSfx('촥!', cx + 220, cy - 140, 110, '#fff', 800);
+        flashOn();
+        shake(0.7);
+      }, 500);
+
+      // 1.0s : 두 번째 발톱 슬래시 (우상→좌하)
+      setTimeout(()=>{
+        spawnClawSlash(-20, cx, cy);
+        spawnSfx('촥!', cx - 240, cy + 130, 110, '#fff', 800);
+        flashOn();
+        shake(0.9);
+      }, 1000);
+
+      // 1.7s : 곰 등장 + "어흥!!" 포효
+      setTimeout(()=>{
+        spawnBear(cx, cy + 40, 1100);
+        spawnSfx('어흥!!', cx, cy - 220, 180, '#fff', 1100);
+        shake(1.2);
+        // 포효 동안 흔들림 누적
+        setTimeout(()=>shake(1.4), 250);
+        setTimeout(()=>shake(1.6), 500);
+      }, 1700);
+
+      // 2.7s : 이빨로 박살 — 임팩트
+      setTimeout(()=>{
+        target.remove();
+        flashOn();
+        zoomPunch();
+        shake(2);
+        spawnImpactLines(cx, cy, 22);
+        spawnShatter(text);
+        hitStop(120);
+        // 곰 발자국 같은 마지막 으르렁
+        setTimeout(()=>spawnSfx('!!', cx, cy, 220, '#fff', 600), 140);
+      }, 2700);
     }
   }
 };
@@ -736,6 +984,173 @@ function spawnRing(x,y) {
     { width:'2400px', height:'2400px', opacity:0, borderWidth:'1px' }
   ], { duration:1500, easing:'cubic-bezier(.1,.8,.2,1)' });
   setTimeout(()=>el.remove(),1500);
+}
+
+/* ============ PRESS 헬퍼 — 위/아래 판이 슉 내려와 으깸 ============ */
+function spawnPress(impactDelay=1400, holdMs=400) {
+  const top = document.createElement('div');
+  top.className = 'press-plate top';
+  const bot = document.createElement('div');
+  bot.className = 'press-plate bot';
+  // 경고 스트라이프
+  const wTop = document.createElement('div');
+  wTop.className = 'press-warning-stripe top';
+  const wBot = document.createElement('div');
+  wBot.className = 'press-warning-stripe bot';
+  document.body.appendChild(wTop);
+  document.body.appendChild(wBot);
+  document.body.appendChild(top);
+  document.body.appendChild(bot);
+
+  // 경고 깜빡임
+  let t = 0;
+  const blinker = setInterval(()=>{
+    wTop.style.opacity = wBot.style.opacity = (t++ % 2) ? '1' : '0';
+  }, 130);
+
+  // 0.6s 후 프레스 강하
+  setTimeout(()=>{
+    clearInterval(blinker);
+    wTop.style.opacity = wBot.style.opacity = '1';
+    top.animate([
+      { transform: 'translateY(-100%)' },
+      { transform: 'translateY(0%)' }
+    ], { duration: impactDelay - 600, easing: 'cubic-bezier(.6,.05,.95,.4)', fill: 'forwards' });
+    bot.animate([
+      { transform: 'translateY(100%)' },
+      { transform: 'translateY(0%)' }
+    ], { duration: impactDelay - 600, easing: 'cubic-bezier(.6,.05,.95,.4)', fill: 'forwards' });
+  }, 600);
+
+  // 으깬 후 잠시 정지 → 다시 열림
+  setTimeout(()=>{
+    setTimeout(()=>{
+      top.animate([{ transform: 'translateY(0%)' },{ transform: 'translateY(-100%)' }],
+        { duration: 600, easing: 'cubic-bezier(.2,.8,.4,1)', fill: 'forwards' });
+      bot.animate([{ transform: 'translateY(0%)' },{ transform: 'translateY(100%)' }],
+        { duration: 600, easing: 'cubic-bezier(.2,.8,.4,1)', fill: 'forwards' });
+      wTop.animate([{opacity:1},{opacity:0}],{duration:600,fill:'forwards'});
+      wBot.animate([{opacity:1},{opacity:0}],{duration:600,fill:'forwards'});
+    }, holdMs);
+  }, impactDelay);
+
+  // 정리
+  setTimeout(()=>{
+    top.remove(); bot.remove(); wTop.remove(); wBot.remove();
+  }, impactDelay + holdMs + 800);
+}
+
+/* ============ CHAINSAW 헬퍼 — 처형 랜덤 이벤트 ============ */
+function spawnChainsaw(text) {
+  const cx = innerWidth/2, cy = innerHeight/2;
+  const saw = document.createElement('div');
+  saw.className = 'chainsaw';
+  saw.textContent = '🪚';
+  // 좌측에서 진입
+  saw.style.left = (-300) + 'px';
+  saw.style.top = cy + 'px';
+  saw.style.transform = 'translate(-50%,-50%) rotate(-20deg)';
+  stage.appendChild(saw);
+
+  // 1) 진입
+  saw.animate([
+    { transform: 'translate(-50%,-50%) rotate(-20deg) scale(1)', left: '-300px', top: cy + 'px' },
+    { transform: 'translate(-50%,-50%) rotate(15deg) scale(1.15)', left: cx + 'px', top: cy + 'px' }
+  ], { duration: 600, easing: 'cubic-bezier(.3,.7,.3,1)', fill: 'forwards' });
+
+  // 2) 가운데서 부르릉 진동 + 옆으로 가면서 갈아버림
+  setTimeout(()=>{
+    saw.animate([
+      { transform: 'translate(-50%,-50%) rotate(15deg) scale(1.15)', filter: 'drop-shadow(0 0 30px #ff8800)' },
+      { transform: 'translate(-50%,-50%) rotate(-15deg) scale(1.2)', filter: 'drop-shadow(0 0 50px #ffaa00)', offset: 0.25 },
+      { transform: 'translate(-50%,-50%) rotate(20deg) scale(1.18)', offset: 0.5 },
+      { transform: 'translate(-50%,-50%) rotate(-10deg) scale(1.2)', offset: 0.75 },
+      { transform: 'translate(-50%,-50%) rotate(10deg) scale(1.15)' }
+    ], { duration: 800, iterations: 1 });
+    // 진동 + 핏물
+    shake(1.2);
+    spawnBloodSplatter(cx, cy, 50);
+    setTimeout(()=>shake(1.5), 200);
+    setTimeout(()=>{
+      shake(1.8);
+      spawnBloodSplatter(cx, cy, 40);
+    }, 400);
+  }, 600);
+
+  // 3) 글자 산산조각 + 곡선 퇴장
+  setTimeout(()=>{
+    spawnShatter(text);
+    flashOn();
+    redHit();
+    zoomPunch();
+    hitStop(120);
+    saw.animate([
+      { transform: 'translate(-50%,-50%) rotate(10deg)', left: cx + 'px' },
+      { transform: 'translate(-50%,-50%) rotate(60deg)', left: (innerWidth + 300) + 'px' }
+    ], { duration: 500, easing: 'cubic-bezier(.5,.05,.95,.4)', fill: 'forwards' });
+    setTimeout(()=>saw.remove(), 600);
+  }, 1500);
+}
+
+/* ============ BEAR 헬퍼들 ============ */
+// 발톱 자국 슬래시 — 화면을 가로지르며 그어지는 흰 줄
+function spawnClawSlash(angleDeg, cx, cy) {
+  const len = Math.max(innerWidth, innerHeight) * 1.4;
+  const el = document.createElement('div');
+  el.className = 'claw-slash';
+  el.style.width = len + 'px';
+  // 시작점이 중앙에 오도록 보정
+  const rad = angleDeg * Math.PI/180;
+  const sx = cx - Math.cos(rad) * len/2;
+  const sy = cy - Math.sin(rad) * len/2;
+  el.style.left = sx + 'px';
+  el.style.top = sy + 'px';
+  el.style.transform = `rotate(${angleDeg}deg) scaleX(0)`;
+  stage.appendChild(el);
+  el.animate([
+    { transform: `rotate(${angleDeg}deg) scaleX(0)`, opacity: 1, transformOrigin: '0% 50%' },
+    { transform: `rotate(${angleDeg}deg) scaleX(1)`, opacity: 1, offset: 0.35 },
+    { transform: `rotate(${angleDeg}deg) scaleX(1)`, opacity: 0 }
+  ], { duration: 700, easing: 'cubic-bezier(.1,.9,.3,1)' });
+  setTimeout(()=>el.remove(), 720);
+}
+
+// 효과음 텍스트 (촥! / 어흥!! 등) — 빵 튀어나왔다 사라짐
+function spawnSfx(text, x, y, size, color, dur=900) {
+  const el = document.createElement('div');
+  el.className = 'sfx';
+  el.textContent = text;
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+  el.style.fontSize = size + 'px';
+  if (color) el.style.color = color;
+  el.style.transform = 'translate(-50%,-50%) scale(0) rotate(-15deg)';
+  stage.appendChild(el);
+  el.animate([
+    { transform: 'translate(-50%,-50%) scale(0) rotate(-25deg)', opacity: 0 },
+    { transform: 'translate(-50%,-50%) scale(1.3) rotate(8deg)', opacity: 1, offset: 0.2 },
+    { transform: 'translate(-50%,-50%) scale(1) rotate(-4deg)', opacity: 1, offset: 0.55 },
+    { transform: 'translate(-50%,-50%) scale(1.1) rotate(2deg)', opacity: 0 }
+  ], { duration: dur, easing: 'cubic-bezier(.2,.9,.3,1)' });
+  setTimeout(()=>el.remove(), dur);
+}
+
+// 곰 등장 — 사이즈 키우면서 등장 후 사라짐
+function spawnBear(x, y, dur=900) {
+  const el = document.createElement('div');
+  el.className = 'bear-mark';
+  el.textContent = '🐻‍❄️';
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+  el.style.transform = 'translate(-50%,-50%) scale(0)';
+  stage.appendChild(el);
+  el.animate([
+    { transform: 'translate(-50%,-50%) scale(0) rotate(-20deg)', opacity: 0 },
+    { transform: 'translate(-50%,-50%) scale(2.4) rotate(0deg)', opacity: 1, offset: 0.25 },
+    { transform: 'translate(-50%,-50%) scale(2.2) rotate(0deg)', opacity: 1, offset: 0.7 },
+    { transform: 'translate(-50%,-50%) scale(3) rotate(8deg)', opacity: 0 }
+  ], { duration: dur, easing: 'cubic-bezier(.2,.9,.3,1)' });
+  setTimeout(()=>el.remove(), dur);
 }
 
 /* ============ EXECUTE 헬퍼들 ============ */
@@ -1020,7 +1435,7 @@ function broadcastDetonate(text) {
 /* ============ 통합 큐 (로컬 + 원격 동일 경로) ============ */
 // 모든 외침은 무조건 큐를 통과해서 한 번에 하나씩, 현재 연출이 끝날 때까지 대기
 const CLIENT_ID = Math.random().toString(36).slice(2) + Date.now().toString(36);
-const THEME_DURATION = { curse: 4200, execute: 5200, rage: 3200, nuclear: 6200 };
+const THEME_DURATION = { curse: 4200, execute: 5200, bear: 3500, rage: 3200, nuclear: 6200, press: 4500 };
 const QUEUE_GAP = 250; // 연출 사이 짧은 정적
 
 const shoutQueue = [];
