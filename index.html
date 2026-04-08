@@ -193,11 +193,25 @@
   }
   @keyframes engulf {
     0%   { transform: translate(-50%,-50%) scale(0.05); opacity: 0; filter: blur(0); }
-    8%   { transform: translate(-50%,-50%) scale(0.1); opacity: 1; }
+    6%   { transform: translate(-50%,-50%) scale(0.1); opacity: 1; }
     50%  { transform: translate(-50%,-50%) scale(2); opacity: 1; }
-    78%  { transform: translate(-50%,-50%) scale(8); opacity: 1; filter: blur(0); }
-    92%  { transform: translate(-50%,-50%) scale(22); opacity: 1; filter: blur(4px); }
-    100% { transform: translate(-50%,-50%) scale(50); opacity: 0; filter: blur(40px); }
+    78%  { transform: translate(-50%,-50%) scale(7); opacity: 1; filter: blur(0); }
+    92%  { transform: translate(-50%,-50%) scale(13); opacity: 1; filter: blur(0); }
+    96%  { transform: translate(-50%,-50%) scale(14); opacity: 1; filter: blur(2px); }
+    100% { transform: translate(-50%,-50%) scale(14.2); opacity: 0; filter: blur(0); }
+  }
+
+  /* 글자 가루(파편) — 부서진 글자조각이 사방으로 흩어짐 */
+  .dust {
+    position: absolute;
+    pointer-events: none;
+    z-index: 30;
+    font-weight: 900;
+    font-family: var(--font);
+    color: #fff;
+    text-shadow: 0 0 8px #ffaa00, 0 0 18px #ff4400, 2px 2px 0 #000;
+    will-change: transform, opacity;
+    white-space: nowrap;
   }
 
   /* ============ 흔들림 ============ */
@@ -413,23 +427,24 @@ const THEMES = {
     palette: ['#ffffff','#ffea00','#ff9100','#ff1744','#ff6600'],
     shoutClass: 'engulf',
     detonate(text) {
-      const intensity = DEFAULT_INTENSITY;
-      // 작은 점에서 시작 → 점점 커지며 화면 꽉 채우고 → 넘어가버림
+      // 작은 점에서 시작 → 점점 커지며 화면 꽉 채우고 → 와장창 깨져 가루로 흩어짐
       spawnShout(text, {
         x: innerWidth/2, y: innerHeight/2,
         size: 80, color: '#fff', cls: 'engulf', dur: 5
       });
-      // 빌드업 흔들림 (점점 강해짐)
+      // 빌드업 흔들림
       shake(0.2);
       setTimeout(()=>shake(0.5), 1500);
       setTimeout(()=>shake(0.9), 3000);
+      // 4.6s 직전: 글자가 산산조각 나며 가루로 흩어짐
       setTimeout(()=>{
         flashOn();
-        setTimeout(flashOn, 100);
-        shake(1.4);
-        for (let i=0;i<6;i++) setTimeout(()=>spawnRing(innerWidth/2,innerHeight/2), i*100);
-        for (let i=0;i<100;i++) spawnEmber(innerWidth/2, innerHeight/2);
-      }, 4000);
+        setTimeout(flashOn, 80);
+        shake(1.5);
+        for (let i=0;i<6;i++) setTimeout(()=>spawnRing(innerWidth/2,innerHeight/2), i*90);
+        for (let i=0;i<60;i++) spawnEmber(innerWidth/2, innerHeight/2);
+        spawnShatter(text);
+      }, 4750);
     }
   }
 };
@@ -545,6 +560,52 @@ function spawnEmber(x,y) {
     { transform:'translate(0,0) scale(1)', opacity:1 },
     { transform:`translate(${Math.cos(a)*s}px,${Math.sin(a)*s + dur*0.3}px) scale(0.2)`, opacity:0 }
   ], { duration: dur, easing:'cubic-bezier(.2,.8,.6,1)' });
+  setTimeout(()=>el.remove(), dur);
+}
+
+// 글자가 와장창 깨지면서 가루가 되어 흩어짐
+// text를 자모/글자 단위로 쪼개서 화면 가득 채운 사이즈로 흩뿌림
+function spawnShatter(text) {
+  const cx = innerWidth/2, cy = innerHeight/2;
+  const chars = Array.from(text);
+  // 글자 수가 적으면 반복해서 가루 양을 늘림
+  const reps = Math.max(1, Math.ceil(80 / Math.max(1, chars.length)));
+  const all = [];
+  for (let r=0;r<reps;r++) for (const ch of chars) all.push(ch);
+
+  // 큰 덩어리(원본 크기 잔해) — 빠르게 사라짐
+  for (let i=0;i<14;i++) {
+    spawnDustChunk(pick(chars), cx + rand(-200,200), cy + rand(-150,150), rand(60,160));
+  }
+  // 가루 — 작은 글자들이 사방 + 약한 중력으로 흩어짐
+  for (let i=0;i<all.length;i++) {
+    spawnDustChunk(all[i], cx + rand(-300,300), cy + rand(-200,200), rand(10,40));
+  }
+}
+
+function spawnDustChunk(ch, x, y, size) {
+  const el = document.createElement('div');
+  el.className = 'dust';
+  el.textContent = ch;
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+  el.style.fontSize = size + 'px';
+  el.style.transform = 'translate(-50%,-50%)';
+  stage.appendChild(el);
+
+  const a = rand(0, Math.PI*2);
+  const speed = rand(400, 1500);
+  const dx = Math.cos(a) * speed;
+  const dy = Math.sin(a) * speed;
+  const gravity = rand(300, 900);
+  const dur = rand(1200, 2400);
+  const spin = rand(-1080, 1080);
+
+  el.animate([
+    { transform: 'translate(-50%,-50%) rotate(0deg)', opacity: 1, filter: 'blur(0)' },
+    { transform: `translate(calc(-50% + ${dx*0.5}px), calc(-50% + ${dy*0.5 + gravity*0.15}px)) rotate(${spin*0.5}deg)`, opacity: 1, offset: 0.5 },
+    { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy + gravity}px)) rotate(${spin}deg)`, opacity: 0, filter: 'blur(4px)' }
+  ], { duration: dur, easing: 'cubic-bezier(.2,.6,.4,1)' });
   setTimeout(()=>el.remove(), dur);
 }
 
