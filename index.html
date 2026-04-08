@@ -1082,20 +1082,6 @@ function setTheme(name) {
 themeBtns.forEach(b => b.addEventListener('click', ()=>setTheme(b.dataset.theme)));
 input.addEventListener('keydown', e => { if (e.key==='Enter') go(); });
 
-stage.addEventListener('click', e => {
-  if (e.target.closest('#panel,#themes')) return;
-  const txt = input.value.trim() || pick(['!','XXX','...']);
-  const t = THEMES[currentTheme];
-  spawnShout(txt, {
-    x: e.clientX, y: e.clientY,
-    size: (DEFAULT_SIZE*0.6),
-    color: pick(t.palette),
-    cls: t.shoutClass, rot: rand(-20,20),
-    dx: rand(-200,200), dy: rand(-200,200),
-    endscale: 2, dur: 2
-  });
-});
-
 </script>
 </body>
 </html>
