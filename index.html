@@ -401,7 +401,7 @@
 
   <div id="counter"><span id="count">0</span></div>
 
-  <input id="text" type="text" placeholder="..." maxlength="120" autofocus>
+  <input id="text" type="text" maxlength="120" autofocus>
 
 <script>
 const stage = document.getElementById('stage');
@@ -991,7 +991,6 @@ function setTheme(name) {
   currentTheme = name;
   document.body.dataset.theme = name;
   const t = THEMES[name];
-  input.placeholder = t.placeholder;
   themeBtns.forEach(b => b.classList.toggle('active', b.dataset.theme===name));
   if (name === 'skydive') initSky();
   else { skyLayer.innerHTML=''; skyClouds=[]; }
