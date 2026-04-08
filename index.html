@@ -994,7 +994,7 @@ function drainQueue() {
   if (incomingQueue.length === 0) { queueRunning = false; return; }
   queueRunning = true;
   const text = incomingQueue.shift();
-  broadcastDetonate(text);
+  THEMES[currentTheme].detonate(text);
   count++;
   countEl.textContent = count;
   // 다음 외침은 0.6~2.0초 사이 랜덤 딜레이로 — 산발적 느낌
