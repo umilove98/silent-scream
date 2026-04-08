@@ -518,68 +518,59 @@ const THEMES = {
     shoutClass: 'verdict',
     detonate(text) {
       const cx = innerWidth/2, cy = innerHeight/2;
+      const chars = Array.from(text);
+      const perChar = 110; // 한 글자당 ms
+      const typeDur = chars.length * perChar;
 
-      // ── 0.0s : GUILTY 등장 + 표적 락온 (느리게, 무겁게)
-      spawnShout('GUILTY', {
-        x: cx, y: cy - 140, size: 80, color: '#e60026',
-        cls: 'verdict', dur: 1.5
+      // 작은 "처형." 라벨 (대상 위)
+      const label = document.createElement('div');
+      label.style.cssText = `position:absolute;left:${cx}px;top:${cy - 130}px;transform:translate(-50%,-50%);font-family:var(--font);font-size:22px;color:#e60026;letter-spacing:6px;z-index:30;text-shadow:0 0 8px #8b0000,2px 2px 0 #000;opacity:0;transition:opacity .25s;`;
+      label.textContent = '처형.';
+      stage.appendChild(label);
+      requestAnimationFrame(()=>{ label.style.opacity = '1'; });
+
+      // 대상 이름 컨테이너 (한 글자씩 채워짐)
+      const target = document.createElement('div');
+      target.style.cssText = `position:absolute;left:${cx}px;top:${cy + 10}px;transform:translate(-50%,-50%);font-family:var(--font);font-size:200px;color:#fff;font-weight:900;font-style:italic;z-index:30;letter-spacing:-2px;white-space:nowrap;text-shadow:0 0 12px #e60026,0 0 30px #8b0000,4px 4px 0 #000,-4px -4px 0 #000;-webkit-text-stroke:2px #e60026;`;
+      target.textContent = '';
+      stage.appendChild(target);
+
+      // 한 글자씩 등장 + 미세 흔들림
+      chars.forEach((ch, i)=>{
+        setTimeout(()=>{
+          target.textContent += ch;
+          shake(0.15);
+        }, i * perChar);
       });
-      // 대상 텍스트 (큼지막하게 가운데 락온)
-      spawnShout(text, {
-        x: cx, y: cy + 20, size: 200, color: '#fff',
-        cls: 'verdict', dur: 1.5
-      });
-      shake(0.3);
 
-      // ── 0.4s : 빨간 경고 깜빡임 시작
-      setTimeout(()=>redWarn(true), 400);
-      setTimeout(()=>redWarn(false), 700);
-      setTimeout(()=>redWarn(true), 850);
-      setTimeout(()=>redWarn(false), 1050);
+      // 타이핑 후 잠깐 락온 → 무기 진입 → 임팩트
+      const lockHold = 250;
+      const weaponDur = 800;
+      const impactAt = typeDur + lockHold + weaponDur;
 
-      // ── 1.1s : 무기가 화면 밖에서 회전하며 날아옴 (0.9s 동안)
+      // 무기 진입
       const weapon = pick(WEAPONS);
       setTimeout(()=>{
-        spawnWeaponSwing(weapon, 900);
-        // 무기 진입 중 점진적 흔들림 + 빨간 틴트 누적
-        shake(0.4);
-        setTimeout(()=>{ shake(0.6); redWarn(true); }, 300);
-        setTimeout(()=>{ shake(0.8); }, 600);
-      }, 1100);
-
-      // ── 2.0s : 임팩트 ███
-      setTimeout(()=>{
-        // 1) 흰색 풀스크린 플래시
-        flashOn();
-        // 2) 빨간 충격 오버레이
-        redHit();
-        // 3) 줌 펀치 (무대가 살짝 확대됐다가 돌아옴)
-        zoomPunch();
-        // 4) 최대 흔들림
-        shake(2);
-        // 5) 충격선
-        spawnImpactLines(cx, cy + 20, 24);
-        // 6) 핏물 폭발
-        spawnBloodSplatter(cx, cy + 20, 60);
-        // 7) 글자 산산조각
-        spawnShatter(text);
-        // 8) 히트 스톱 — 모든 애니메이션을 120ms 정지시켜 임팩트를 못박음
-        hitStop(120);
-      }, 2000);
-
-      // ── 2.4s : 후속 핏방울이 떨어지며 잔상
-      setTimeout(()=>{
-        for (let i=0;i<10;i++) spawnDrip(rand(0, innerWidth), rand(0, innerHeight*0.5));
-      }, 2400);
-
-      // ── 2.8s : 처형 결과 도장
-      setTimeout(()=>{
-        spawnShout('EXECUTED', {
-          x: cx, y: cy, size: 180, color: '#e60026',
-          cls: 'verdict', dur: 2
-        });
+        spawnWeaponSwing(weapon, weaponDur);
         shake(0.5);
-      }, 2800);
+        setTimeout(()=>shake(0.8), weaponDur*0.4);
+      }, typeDur + lockHold);
+
+      // ███ IMPACT ███
+      setTimeout(()=>{
+        // 표적/라벨 즉시 제거 — 산산조각으로 대체
+        target.remove();
+        label.remove();
+
+        flashOn();
+        redHit();
+        zoomPunch();
+        shake(2);
+        spawnImpactLines(cx, cy + 10, 24);
+        spawnBloodSplatter(cx, cy + 10, 60);
+        spawnShatter(text);
+        hitStop(120);
+      }, impactAt);
     }
   },
 
