@@ -1524,28 +1524,30 @@ const THEMES = {
       stage.appendChild(target);
       shake(0.3);
 
-      // 0.5s : 첫 번째 발톱 슬래시 (좌상→우하)
+      // 0.5s : 첫 번째 발톱 슬래시 — 3개 (좌상→우하 방향, 평행하게)
       setTimeout(()=>{
-        spawnClawSlash(20, cx, cy);
+        spawnClawSlash(20, cx - 70, cy - 50);
+        spawnClawSlash(20, cx,       cy);
+        spawnClawSlash(20, cx + 70,  cy + 50);
         spawnSfx('촥!', cx + 220, cy - 140, 110, '#fff', 800);
         flashOn();
         shake(0.7);
       }, 500);
 
-      // 1.0s : 두 번째 발톱 슬래시 (우상→좌하)
+      // 1.0s : 두 번째 발톱 슬래시 — 3개 (우상→좌하 방향, 평행하게)
       setTimeout(()=>{
-        spawnClawSlash(-20, cx, cy);
+        spawnClawSlash(-20, cx - 70, cy + 50);
+        spawnClawSlash(-20, cx,       cy);
+        spawnClawSlash(-20, cx + 70,  cy - 50);
         spawnSfx('촥!', cx - 240, cy + 130, 110, '#fff', 800);
         flashOn();
         shake(0.9);
       }, 1000);
 
-      // 1.7s : 곰 등장 + "어흥!!" 포효
+      // 1.7s : 곰 등장 (포효 멘트 없음)
       setTimeout(()=>{
         spawnBear(cx, cy + 40, 1100);
-        spawnSfx('어흥!!', cx, cy - 220, 180, '#fff', 1100);
         shake(1.2);
-        // 포효 동안 흔들림 누적
         setTimeout(()=>shake(1.4), 250);
         setTimeout(()=>shake(1.6), 500);
       }, 1700);
