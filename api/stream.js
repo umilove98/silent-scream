@@ -6,14 +6,17 @@ const redis = new Redis({
   url: process.env.UPSTASH_REDIS_KV_REST_API_URL,
   token: process.env.UPSTASH_REDIS_KV_REST_API_TOKEN,
 });
-const FEED_KEY = 'shouts:feed';
 const POLL_MS = 1200;
 const MAX_DURATION_MS = 25000;
+const ROOMS = new Set(['rage','bamboo','curse','skydive','nuclear']);
 
 export default async function handler(req) {
   const url = new URL(req.url);
   let since = parseInt(url.searchParams.get('since'), 10);
   if (!Number.isFinite(since)) since = Date.now();
+  const roomParam = url.searchParams.get('room') || 'rage';
+  const room = ROOMS.has(roomParam) ? roomParam : 'rage';
+  const FEED_KEY = `shouts:${room}`;
 
   const encoder = new TextEncoder();
 

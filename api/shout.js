@@ -4,8 +4,9 @@ const redis = new Redis({
   url: process.env.UPSTASH_REDIS_KV_REST_API_URL,
   token: process.env.UPSTASH_REDIS_KV_REST_API_TOKEN,
 });
-const FEED_KEY = 'shouts:feed';
 const MAX_LEN = 200;
+const ROOMS = new Set(['rage','bamboo','curse','skydive','nuclear']);
+const feedKey = (room) => `shouts:${room}`;
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -20,14 +21,15 @@ export default async function handler(req, res) {
   const text = (body && typeof body.text === 'string') ? body.text.trim() : '';
   if (!text) return res.status(400).json({ error: 'empty text' });
 
+  const room = (body && typeof body.room === 'string' && ROOMS.has(body.room)) ? body.room : 'rage';
   const clean = text.slice(0, 200);
   const ts = Date.now();
   const id = ts + '-' + Math.random().toString(36).slice(2, 8);
-  const payload = JSON.stringify({ id, text: clean, ts });
+  const payload = JSON.stringify({ id, text: clean, ts, room });
+  const key = feedKey(room);
 
-  await redis.zadd(FEED_KEY, { score: ts, member: payload });
-  // 최근 MAX_LEN개만 유지
-  await redis.zremrangebyrank(FEED_KEY, 0, -MAX_LEN - 1);
+  await redis.zadd(key, { score: ts, member: payload });
+  await redis.zremrangebyrank(key, 0, -MAX_LEN - 1);
 
-  res.status(200).json({ ok: true, id, ts });
+  res.status(200).json({ ok: true, id, ts, room });
 }

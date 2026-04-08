@@ -26,31 +26,31 @@
 
   /* ============ 테마별 배경 ============ */
   body[data-theme="rage"] {
-    --bg: radial-gradient(circle at 50% 50%, #1a0000 0%, #000 70%);
+    --bg: #000;
     --ink: #fff; --accent: #ff1744;
     --font: 'Impact','Arial Black','Malgun Gothic',sans-serif;
     --shake-amp: 10px;
   }
   body[data-theme="bamboo"] {
-    --bg: linear-gradient(180deg, #0a1f0a 0%, #1a3d1a 50%, #0d2d0d 100%);
+    --bg: #0d1f0d;
     --ink: #f4f1e8; --accent: #2d5016;
     --font: 'Georgia','Batang','Malgun Gothic',serif;
     --shake-amp: 2px;
   }
   body[data-theme="curse"] {
-    --bg: radial-gradient(ellipse at center, #2a0000 0%, #0a0000 60%, #000 100%);
+    --bg: #0a0000;
     --ink: #d4c4c4; --accent: #8b0000;
     --font: 'Times New Roman','Batang',serif;
     --shake-amp: 4px;
   }
   body[data-theme="skydive"] {
-    --bg: linear-gradient(180deg, #0a1a3a 0%, #2a5a9a 30%, #87ceeb 70%, #e0f6ff 100%);
+    --bg: #1a2a4a;
     --ink: #fff; --accent: #00bfff;
     --font: 'Helvetica','Arial Black',sans-serif;
     --shake-amp: 3px;
   }
   body[data-theme="nuclear"] {
-    --bg: radial-gradient(circle at 50% 50%, #3a2000 0%, #1a0a00 60%, #000 100%);
+    --bg: #0a0a0a;
     --ink: #fff; --accent: #ffaa00;
     --font: 'Impact','Arial Black',sans-serif;
     --shake-amp: 14px;
@@ -116,134 +116,62 @@
     will-change: transform;
   }
 
-  /* ============ 입력 패널 ============ */
-  #panel {
+  /* ============ 입력창 (덩그러니) ============ */
+  #text {
     position: fixed;
     left: 50%;
-    bottom: 24px;
+    bottom: 40px;
     transform: translateX(-50%);
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    background: rgba(0,0,0,.78);
-    backdrop-filter: blur(10px);
-    border: 1px solid #333;
-    padding: 12px 16px;
-    border-radius: 12px;
-    z-index: 100;
-    box-shadow: 0 0 40px rgba(0,0,0,.6);
-    max-width: 95vw;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  #panel input[type="text"] {
-    background: #111;
-    border: 1px solid #444;
-    color: #fff;
-    padding: 10px 14px;
-    font-size: 16px;
-    font-family: inherit;
-    border-radius: 6px;
-    width: 320px;
-    outline: none;
-  }
-  #panel input[type="text"]:focus { border-color: var(--accent); }
-  #panel button#shout {
-    background: var(--accent);
-    color: #fff;
-    border: none;
-    padding: 10px 18px;
-    font-size: 15px;
-    font-weight: bold;
-    font-family: 'Impact','Arial Black',sans-serif;
-    border-radius: 6px;
-    cursor: pointer;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    transition: transform .1s, box-shadow .2s;
-  }
-  #panel button#shout:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 25px var(--accent);
-  }
-  #panel label {
-    font-size: 11px;
-    color: #999;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-family: sans-serif;
-  }
-  #panel input[type="range"] { width: 80px; accent-color: var(--accent); }
-  #panel input[type="color"] {
-    width: 36px; height: 30px; border: 1px solid #444;
-    background: #111; border-radius: 4px; cursor: pointer;
-  }
-
-  /* ============ 테마 탭 ============ */
-  #themes {
-    position: fixed;
-    top: 60px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 6px;
-    z-index: 100;
-    background: rgba(0,0,0,.6);
-    padding: 6px;
-    border-radius: 30px;
-    backdrop-filter: blur(8px);
-    border: 1px solid #2a2a2a;
-  }
-  #themes button {
     background: transparent;
-    color: #888;
     border: none;
-    padding: 8px 16px;
-    font-size: 12px;
+    border-bottom: 1px solid rgba(255,255,255,.25);
+    color: rgba(255,255,255,.95);
+    padding: 8px 4px;
+    font-size: 15px;
     font-family: sans-serif;
-    font-weight: bold;
-    border-radius: 20px;
-    cursor: pointer;
-    letter-spacing: 1px;
-    transition: all .2s;
-  }
-  #themes button:hover { color: #fff; }
-  #themes button.active {
-    background: var(--accent);
-    color: #fff;
-    box-shadow: 0 0 20px var(--accent);
-  }
-
-  /* ============ 헤더/카운터 ============ */
-  #title {
-    position: fixed;
-    top: 20px; left: 50%;
-    transform: translateX(-50%);
-    font-size: 14px;
-    letter-spacing: 8px;
-    color: #666;
-    z-index: 100;
-    text-transform: uppercase;
-    pointer-events: none;
+    width: 360px;
+    max-width: 80vw;
+    outline: none;
     text-align: center;
-    font-family: sans-serif;
+    z-index: 100;
+    letter-spacing: 0.5px;
   }
-  #title b { color: var(--accent); }
+  #text::placeholder { color: rgba(255,255,255,.3); }
+  #text:focus { border-bottom-color: rgba(255,255,255,.6); }
+
+  /* ============ 카운터 (좌측 상단) ============ */
   #counter {
     position: fixed;
-    top: 20px; right: 20px;
+    top: 14px; left: 16px;
     font-size: 11px;
-    color: #777;
-    letter-spacing: 2px;
+    color: rgba(255,255,255,.4);
     z-index: 100;
-    text-align: right;
+    font-family: sans-serif;
+    pointer-events: none;
+    letter-spacing: 0.5px;
+  }
+
+  /* ============ 테마 (우측 상단, 텍스트만) ============ */
+  #themes {
+    position: fixed;
+    top: 14px; right: 16px;
+    display: flex;
+    gap: 14px;
+    z-index: 100;
     font-family: sans-serif;
   }
-  #counter b { color: var(--accent); font-size: 22px; display: block; }
+  #themes button {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,.3);
+    font-size: 11px;
+    padding: 0;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    font-family: inherit;
+  }
+  #themes button:hover { color: rgba(255,255,255,.8); }
+  #themes button.active { color: rgba(255,255,255,1); }
 
   /* ============ 외침 텍스트 ============ */
   .shout {
@@ -463,39 +391,29 @@
   </div>
   <div id="flash"></div>
 
-  <div id="title"><b>■</b> <span id="title-text">조용한 비명실</span> <b>■</b></div>
-
   <div id="themes">
-    <button data-theme="rage" class="active">🩸 분노</button>
-    <button data-theme="bamboo">🎋 대나무숲</button>
-    <button data-theme="curse">👻 저주</button>
-    <button data-theme="skydive">🪂 스카이다이빙</button>
-    <button data-theme="nuclear">💥 핵폭발</button>
+    <button data-theme="rage" class="active">rage</button>
+    <button data-theme="bamboo">bamboo</button>
+    <button data-theme="curse">curse</button>
+    <button data-theme="skydive">skydive</button>
+    <button data-theme="nuclear">nuclear</button>
   </div>
 
-  <div id="counter"><span id="count-label">오늘 터진 비명</span><b id="count">0</b></div>
+  <div id="counter"><span id="count">0</span></div>
 
-  <div id="panel">
-    <input id="text" type="text" placeholder="여기에 쏟아내..." maxlength="120" autofocus>
-    <label>크기<input id="size" type="range" min="40" max="400" value="160"></label>
-    <label>색<input id="color" type="color" value="#ff1744"></label>
-    <label>강도<input id="intensity" type="range" min="1" max="20" value="8"></label>
-    <button id="shout">💥 SCREAM</button>
-  </div>
+  <input id="text" type="text" placeholder="..." maxlength="120" autofocus>
 
 <script>
 const stage = document.getElementById('stage');
 const skyLayer = document.getElementById('sky-layer');
 const input = document.getElementById('text');
-const sizeEl = document.getElementById('size');
-const colorEl = document.getElementById('color');
-const intensityEl = document.getElementById('intensity');
-const shoutBtn = document.getElementById('shout');
 const flash = document.getElementById('flash');
 const countEl = document.getElementById('count');
-const titleText = document.getElementById('title-text');
-const countLabel = document.getElementById('count-label');
 const themeBtns = document.querySelectorAll('#themes button');
+
+// 고정 디폴트 (UI 제거)
+const DEFAULT_SIZE = 160;
+const DEFAULT_INTENSITY = 8;
 
 const rand = (a,b) => a + Math.random()*(b-a);
 const pick = arr => arr[Math.floor(Math.random()*arr.length)];
@@ -513,13 +431,13 @@ const THEMES = {
     palette: ['#ff1744','#ff9100','#ffea00','#00e676','#00e5ff','#d500f9','#ff4081','#ffffff'],
     shoutClass: 'glitch',
     detonate(text) {
-      const intensity = +intensityEl.value;
-      const size = +sizeEl.value;
+      const intensity = DEFAULT_INTENSITY;
+      const size = DEFAULT_SIZE;
       flashOn();
       shake();
       spawnShout(text, {
         x: innerWidth/2, y: innerHeight/2,
-        size, color: colorEl.value,
+        size, color: this.accent,
         cls: 'glitch', rot: rand(-8,8), dx:0, dy:0,
         endscale: 3, dur: 2.8
       });
@@ -535,7 +453,7 @@ const THEMES = {
         });
       }, i*30);
       for (let i=0;i<3;i++) spawnCrack(rand(innerWidth*.2,innerWidth*.8), rand(innerHeight*.2,innerHeight*.8));
-      for (let i=0;i<40;i++) spawnShard(innerWidth/2, innerHeight/2, colorEl.value);
+      for (let i=0;i<40;i++) spawnShard(innerWidth/2, innerHeight/2, this.accent);
     }
   },
 
@@ -547,8 +465,8 @@ const THEMES = {
     palette: ['#0a0a0a','#1a1a1a','#2d3d1d'],
     shoutClass: 'ink',
     detonate(text) {
-      const intensity = +intensityEl.value;
-      const size = +sizeEl.value;
+      const intensity = DEFAULT_INTENSITY;
+      const size = DEFAULT_SIZE;
       shake(0.4);
       spawnShout(text, {
         x: innerWidth/2, y: innerHeight*0.6,
@@ -576,8 +494,8 @@ const THEMES = {
     palette: ['#8b0000','#4a0000','#6a0000','#2a0000'],
     shoutClass: 'tremble',
     detonate(text) {
-      const intensity = +intensityEl.value;
-      const size = +sizeEl.value;
+      const intensity = DEFAULT_INTENSITY;
+      const size = DEFAULT_SIZE;
       flashOn();
       shake(0.6);
       spawnRune();
@@ -611,8 +529,8 @@ const THEMES = {
     palette: ['#ffffff','#00bfff','#87ceeb','#ffea00','#ff69b4'],
     shoutClass: 'wind',
     detonate(text) {
-      const intensity = +intensityEl.value;
-      const size = +sizeEl.value;
+      const intensity = DEFAULT_INTENSITY;
+      const size = DEFAULT_SIZE;
       skyBoost();
       shake(0.3);
       spawnShout(text, {
@@ -640,8 +558,8 @@ const THEMES = {
     palette: ['#ffffff','#ffea00','#ff9100','#ff1744','#ff6600'],
     shoutClass: 'mega',
     detonate(text) {
-      const intensity = +intensityEl.value;
-      const size = +sizeEl.value;
+      const intensity = DEFAULT_INTENSITY;
+      const size = DEFAULT_SIZE;
       // 거대 플래시
       flashOn();
       setTimeout(flashOn, 100);
@@ -1002,17 +920,24 @@ function drainQueue() {
   setTimeout(drainQueue, next);
 }
 
-/* ============ SSE 연결 ============ */
-const seenIds = new Set();
+/* ============ SSE 연결 (테마=방) ============ */
+let seenIds = new Set();
 let sinceTs = Date.now();
 let es = null;
+let streamRoom = null;
+let reconnectTimer = null;
+
 function connectStream() {
   try { if (es) es.close(); } catch {}
-  es = new EventSource(`/api/stream?since=${sinceTs}`);
+  if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
+  streamRoom = currentTheme;
+  es = new EventSource(`/api/stream?room=${streamRoom}&since=${sinceTs}`);
   es.onmessage = (e) => {
     try {
       const obj = JSON.parse(e.data);
       if (!obj || !obj.id || seenIds.has(obj.id)) return;
+      // 방이 바뀌었으면 무시
+      if (obj.room && obj.room !== currentTheme) return;
       seenIds.add(obj.id);
       if (typeof obj.ts === 'number' && obj.ts > sinceTs) sinceTs = obj.ts;
       enqueueIncoming(obj.text);
@@ -1020,10 +945,19 @@ function connectStream() {
   };
   es.onerror = () => {
     try { es.close(); } catch {}
-    setTimeout(connectStream, 2000);
+    reconnectTimer = setTimeout(connectStream, 2000);
   };
 }
-// SSE 시작 (api 없는 로컬 환경에서도 에러만 나고 동작은 함)
+
+function switchRoom() {
+  // 방 전환 시 큐/seen 초기화 + 새 방으로 SSE 재연결
+  incomingQueue.length = 0;
+  queueRunning = false;
+  seenIds = new Set();
+  sinceTs = Date.now();
+  connectStream();
+}
+
 connectStream();
 
 /* ============ 메인 ============ */
@@ -1041,7 +975,7 @@ async function go() {
     const res = await fetch('/api/shout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text })
+      body: JSON.stringify({ text, room: currentTheme })
     });
     if (res.ok) {
       const data = await res.json();
@@ -1057,18 +991,14 @@ function setTheme(name) {
   currentTheme = name;
   document.body.dataset.theme = name;
   const t = THEMES[name];
-  titleText.textContent = t.title;
-  countLabel.textContent = t.label;
   input.placeholder = t.placeholder;
-  colorEl.value = t.accent;
   themeBtns.forEach(b => b.classList.toggle('active', b.dataset.theme===name));
   if (name === 'skydive') initSky();
   else { skyLayer.innerHTML=''; skyClouds=[]; }
+  if (typeof switchRoom === 'function') switchRoom();
 }
 
 themeBtns.forEach(b => b.addEventListener('click', ()=>setTheme(b.dataset.theme)));
-
-shoutBtn.addEventListener('click', go);
 input.addEventListener('keydown', e => { if (e.key==='Enter') go(); });
 
 stage.addEventListener('click', e => {
@@ -1077,7 +1007,7 @@ stage.addEventListener('click', e => {
   const t = THEMES[currentTheme];
   spawnShout(txt, {
     x: e.clientX, y: e.clientY,
-    size: +sizeEl.value*0.6,
+    size: (DEFAULT_SIZE*0.6),
     color: pick(t.palette),
     cls: t.shoutClass, rot: rand(-20,20),
     dx: rand(-200,200), dy: rand(-200,200),
