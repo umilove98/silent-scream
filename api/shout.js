@@ -5,7 +5,7 @@ const redis = new Redis({
   token: process.env.UPSTASH_REDIS_KV_REST_API_TOKEN,
 });
 const MAX_LEN = 200;
-const ROOMS = new Set(['rage','bamboo','curse','skydive','nuclear']);
+const ROOMS = new Set(['rage','curse','nuclear']);
 const feedKey = (room) => `shouts:${room}`;
 
 export default async function handler(req, res) {
@@ -21,7 +21,7 @@ export default async function handler(req, res) {
   const text = (body && typeof body.text === 'string') ? body.text.trim() : '';
   if (!text) return res.status(400).json({ error: 'empty text' });
 
-  const room = (body && typeof body.room === 'string' && ROOMS.has(body.room)) ? body.room : 'rage';
+  const room = (body && typeof body.room === 'string' && ROOMS.has(body.room)) ? body.room : 'curse';
   const clean = text.slice(0, 200);
   const ts = Date.now();
   const id = ts + '-' + Math.random().toString(36).slice(2, 8);

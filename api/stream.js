@@ -8,14 +8,14 @@ const redis = new Redis({
 });
 const POLL_MS = 1200;
 const MAX_DURATION_MS = 25000;
-const ROOMS = new Set(['rage','bamboo','curse','skydive','nuclear']);
+const ROOMS = new Set(['rage','curse','nuclear']);
 
 export default async function handler(req) {
   const url = new URL(req.url);
   let since = parseInt(url.searchParams.get('since'), 10);
   if (!Number.isFinite(since)) since = Date.now();
-  const roomParam = url.searchParams.get('room') || 'rage';
-  const room = ROOMS.has(roomParam) ? roomParam : 'rage';
+  const roomParam = url.searchParams.get('room') || 'curse';
+  const room = ROOMS.has(roomParam) ? roomParam : 'curse';
   const FEED_KEY = `shouts:${room}`;
 
   const encoder = new TextEncoder();
