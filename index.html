@@ -48,6 +48,111 @@
     --font: 'Impact','Arial Black','Malgun Gothic',sans-serif;
     --shake-amp: 18px;
   }
+  body[data-theme="undertale"] {
+    --bg: #000000;
+    --ink: #fff; --accent: #00b0ff;
+    --font: 'Courier New','D2Coding','Consolas',monospace;
+    --shake-amp: 6px;
+  }
+  body[data-theme="undertale"] #stage::before { background: none; }
+
+  /* UNDERTALE — Sans ASCII + 다이얼로그 박스 */
+  .sans-ascii {
+    position: absolute;
+    z-index: 30;
+    font-family: 'Courier New','Consolas',monospace;
+    font-size: 16px;
+    line-height: 1;
+    color: #fff;
+    white-space: pre;
+    text-shadow: 0 0 10px rgba(255,255,255,.3);
+    pointer-events: none;
+    will-change: opacity, transform;
+  }
+  .sans-ascii .eye {
+    color: #fff;
+    transition: color 0.1s, text-shadow 0.1s;
+  }
+  .sans-ascii.flash .eye {
+    color: #00b0ff;
+    text-shadow: 0 0 20px #00b0ff, 0 0 40px #0080ff, 0 0 60px #0040ff;
+  }
+  .dialog-box {
+    position: absolute;
+    z-index: 30;
+    border: 4px solid #fff;
+    background: #000;
+    padding: 24px 32px;
+    font-family: 'Courier New','D2Coding','Consolas','Malgun Gothic',monospace;
+    font-size: 28px;
+    color: #fff;
+    line-height: 1.5;
+    box-shadow: 0 0 30px rgba(255,255,255,.2);
+    pointer-events: none;
+    will-change: opacity;
+    min-height: 140px;
+    min-width: 480px;
+    max-width: 60vw;
+    white-space: pre-wrap;
+  }
+  .dialog-box::after {
+    content: '_';
+    animation: dlgBlink .5s steps(2) infinite;
+  }
+  @keyframes dlgBlink {
+    50% { opacity: 0; }
+  }
+  /* 본 (뼈) 공격 */
+  .bone {
+    position: absolute;
+    z-index: 31;
+    background: #fff;
+    box-shadow: 0 0 12px rgba(255,255,255,.8);
+    pointer-events: none;
+    will-change: transform, opacity;
+  }
+  .bone::before, .bone::after {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 12px rgba(255,255,255,.8);
+  }
+  .bone.vert {
+    width: 8px;
+  }
+  .bone.vert::before { top: -6px; left: -3px; }
+  .bone.vert::after  { bottom: -6px; left: -3px; }
+  .bone.horz {
+    height: 8px;
+  }
+  .bone.horz::before { left: -6px; top: -3px; }
+  .bone.horz::after  { right: -6px; top: -3px; }
+  /* SOUL (빨간 하트) */
+  .soul {
+    position: absolute;
+    z-index: 32;
+    width: 30px;
+    height: 30px;
+    background:
+      radial-gradient(circle at 30% 30%, #ff8080 0%, #ff0000 50%, #800000 100%);
+    transform: rotate(45deg);
+    filter: drop-shadow(0 0 12px rgba(255,0,0,.8));
+    pointer-events: none;
+  }
+  .soul::before, .soul::after {
+    content: '';
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    background: inherit;
+    border-radius: 50%;
+  }
+  .soul::before { top: -15px; left: 0; }
+  .soul::after  { left: -15px; top: 0; }
+
   body[data-theme="space"] {
     --bg: #000010;
     --ink: #fff; --accent: #88ccff;
@@ -721,6 +826,7 @@
     <button data-theme="bear">북극곰</button>
     <button data-theme="press">유압프레스</button>
     <button data-theme="space">우주미아</button>
+    <button data-theme="undertale">언더테일</button>
     <button data-theme="rage">격노</button>
     <button data-theme="nuclear">핵폭발</button>
   </div>
@@ -928,6 +1034,198 @@ const THEMES = {
     }
   },
 
+  undertale: {
+    title: '심판의 시간 · UNDERTALE',
+    label: '심판한 영혼',
+    accent: '#00b0ff',
+    palette: ['#ffffff','#00b0ff','#ff0000'],
+    shoutClass: 'verdict',
+    detonate(text) {
+      const cx = innerWidth/2, cy = innerHeight/2;
+
+      // 좌측 Sans (ASCII)
+      const sansArt =
+`        .---.
+       /     \\
+      |  ${'<span class="eye">o</span>'}   ${'<span class="eye">o</span>'}  |
+      |   .   |
+      |  ___  |
+       \\_____/
+       /|   |\\
+      / |   | \\
+     |  |___|  |
+     |  |   |  |
+      \\ |   | /
+       \\|___|/
+        |   |
+        |___|`;
+
+      const sans = document.createElement('div');
+      sans.className = 'sans-ascii';
+      sans.innerHTML = sansArt;
+      sans.style.left = (cx - 380) + 'px';
+      sans.style.top = (cy - 140) + 'px';
+      sans.style.fontSize = '18px';
+      sans.style.opacity = '0';
+      stage.appendChild(sans);
+      sans.animate([{opacity:0},{opacity:1}],{duration:400,fill:'forwards'});
+
+      // 우측 다이얼로그 박스
+      const dlg = document.createElement('div');
+      dlg.className = 'dialog-box';
+      dlg.style.left = (cx - 80) + 'px';
+      dlg.style.top = (cy - 100) + 'px';
+      dlg.textContent = '';
+      stage.appendChild(dlg);
+
+      // SOUL (대상 텍스트가 SOUL로 박스 위쪽에 작게 표시됨)
+      const targetLabel = document.createElement('div');
+      targetLabel.style.cssText = `position:absolute;left:${cx + 20}px;top:${cy - 180}px;font-family:var(--font);font-size:14px;color:rgba(255,255,255,.6);letter-spacing:2px;z-index:31;`;
+      targetLabel.textContent = '* 대상: ' + text;
+      stage.appendChild(targetLabel);
+
+      // 대사 라인
+      const lines = [
+        '정말 아름다운 날이야.',
+        '새들은 지저귀고,',
+        '꽃들은 피어나고..',
+        '이런 날엔...',
+        '너같은 녀석들은—'
+      ];
+
+      // 한 줄씩 타이핑하는 헬퍼
+      function typeLine(line, perChar, done) {
+        const start = dlg.textContent.length > 0 ? '\n' : '';
+        let i = 0;
+        const target = start + line;
+        function step() {
+          dlg.textContent += target[i++];
+          if (i < target.length) setTimeout(step, perChar);
+          else if (done) done();
+        }
+        step();
+      }
+
+      // 0.4s 후 대사 시작
+      let t = 400;
+      lines.forEach((line, idx) => {
+        setTimeout(()=>{
+          // 줄 사이 약간의 정적
+          if (idx > 0) dlg.textContent += '\n';
+          let i = 0;
+          (function step(){
+            dlg.textContent += line[i++];
+            if (i < line.length) setTimeout(step, 55);
+          })();
+        }, t);
+        t += line.length * 55 + 350;
+      });
+
+      // 마지막 줄 타이핑 끝난 직후 — 잠깐의 정적
+      const afterLines = t + 200;
+
+      // 정적 후 Sans의 눈이 파랗게 빛남 + 다이얼로그 비움
+      setTimeout(()=>{
+        sans.classList.add('flash');
+        dlg.textContent = '';
+        flashOn();
+        shake(0.6);
+      }, afterLines);
+
+      // 0.4s 후 마지막 결정타 대사
+      setTimeout(()=>{
+        const final = '지옥에서 불타 버려야 해';
+        let i = 0;
+        (function step(){
+          dlg.textContent += final[i++];
+          shake(0.2);
+          if (i < final.length) setTimeout(step, 70);
+        })();
+      }, afterLines + 400);
+
+      // 대사 끝나고 본 어택 시작
+      const attackAt = afterLines + 400 + 23 * 70 + 400;
+
+      setTimeout(()=>{
+        // 다이얼로그/Sans/라벨 제거
+        dlg.remove();
+        sans.remove();
+        targetLabel.remove();
+
+        // SOUL 등장 (대상 텍스트의 영혼)
+        const soul = document.createElement('div');
+        soul.className = 'soul';
+        soul.style.left = cx + 'px';
+        soul.style.top = cy + 'px';
+        soul.style.transform = 'translate(-50%,-50%) rotate(45deg) scale(0)';
+        stage.appendChild(soul);
+        soul.animate([
+          { transform: 'translate(-50%,-50%) rotate(45deg) scale(0)', opacity: 0 },
+          { transform: 'translate(-50%,-50%) rotate(45deg) scale(1)', opacity: 1 }
+        ], { duration: 300, fill: 'forwards' });
+
+        // 본 어택 — 위/아래/좌/우에서 줄줄이
+        for (let i=0;i<14;i++) {
+          setTimeout(()=>{
+            const fromTop = Math.random() > 0.5;
+            const bone = document.createElement('div');
+            bone.className = 'bone vert';
+            const len = rand(120, 260);
+            bone.style.width = '8px';
+            bone.style.height = len + 'px';
+            const x = cx + rand(-300, 300);
+            bone.style.left = x + 'px';
+            bone.style.top = (fromTop ? -len : innerHeight) + 'px';
+            stage.appendChild(bone);
+            const targetY = fromTop ? innerHeight + 50 : -len - 50;
+            bone.animate([
+              { transform: 'translateY(0)', opacity: 1 },
+              { transform: `translateY(${targetY - parseFloat(bone.style.top)}px)`, opacity: 1 }
+            ], { duration: 700, easing: 'linear' });
+            setTimeout(()=>bone.remove(), 720);
+          }, i * 80);
+        }
+
+        // 좌우 본
+        for (let i=0;i<10;i++) {
+          setTimeout(()=>{
+            const fromLeft = Math.random() > 0.5;
+            const bone = document.createElement('div');
+            bone.className = 'bone horz';
+            const len = rand(120, 260);
+            bone.style.height = '8px';
+            bone.style.width = len + 'px';
+            const y = cy + rand(-200, 200);
+            bone.style.top = y + 'px';
+            bone.style.left = (fromLeft ? -len : innerWidth) + 'px';
+            stage.appendChild(bone);
+            const targetX = fromLeft ? innerWidth + 50 : -len - 50;
+            bone.animate([
+              { transform: 'translateX(0)', opacity: 1 },
+              { transform: `translateX(${targetX - parseFloat(bone.style.left)}px)`, opacity: 1 }
+            ], { duration: 700, easing: 'linear' });
+            setTimeout(()=>bone.remove(), 720);
+          }, i * 100 + 200);
+        }
+
+        shake(1.2);
+        setTimeout(()=>shake(1.5), 400);
+
+        // KARMA 임팩트 — SOUL이 박살
+        setTimeout(()=>{
+          flashOn();
+          zoomPunch();
+          shake(2);
+          spawnImpactLines(cx, cy, 22);
+          spawnBloodSplatter(cx, cy, 50);
+          spawnShatter(text);
+          hitStop(150);
+          soul.remove();
+        }, 1300);
+      }, attackAt);
+    }
+  },
+
   space: {
     title: '우주미아 · LOST IN SPACE',
     label: '미아 횟수',
@@ -1056,20 +1354,6 @@ const THEMES = {
         ship.style.top = (cy - 200) + 'px';
         ship.style.transform = 'translate(-50%,-50%) rotate(45deg)';
         stage.appendChild(ship);
-
-        const msg = document.createElement('div');
-        msg.className = 'lost-msg';
-        msg.textContent = '...도와주세요...';
-        msg.style.left = cx + 'px';
-        msg.style.top = (cy + 60) + 'px';
-        msg.style.transform = 'translate(-50%,-50%)';
-        stage.appendChild(msg);
-        msg.animate([
-          { opacity: 0 },
-          { opacity: 1, offset: 0.3 },
-          { opacity: 0 }
-        ], { duration: 2200 });
-        setTimeout(()=>msg.remove(), 2200);
 
         // 블랙홀 등장 (오른쪽 위에서 빠르게 커짐)
         const bh = document.createElement('div');
@@ -1764,7 +2048,7 @@ function broadcastDetonate(text) {
 /* ============ 통합 큐 (로컬 + 원격 동일 경로) ============ */
 // 모든 외침은 무조건 큐를 통과해서 한 번에 하나씩, 현재 연출이 끝날 때까지 대기
 const CLIENT_ID = Math.random().toString(36).slice(2) + Date.now().toString(36);
-const THEME_DURATION = { curse: 4200, execute: 5200, bear: 3500, rage: 3200, nuclear: 6200, press: 4500, space: 9200 };
+const THEME_DURATION = { curse: 4200, execute: 5200, bear: 3500, rage: 3200, nuclear: 6200, press: 4500, space: 9200, undertale: 11000 };
 const QUEUE_GAP = 250; // 연출 사이 짧은 정적
 
 const shoutQueue = [];
