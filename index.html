@@ -1701,25 +1701,17 @@ const THEMES = {
     detonate(text) {
       const cx = innerWidth/2, cy = innerHeight/2;
 
-      // 0.0s : konan_door.mp4 재생
-      const door = document.createElement('video');
+      // 0.0s : konan_door.webp 재생
+      const door = document.createElement('img');
       door.className = 'konan-door';
-      door.src = 'konan_door.mp4';
-      door.muted = true;
-      door.autoplay = true;
-      door.playsInline = true;
+      door.src = 'konan_door.webp?t=' + Date.now();
       stage.appendChild(door);
-      door.play().catch(()=>{});
       shake(0.4);
 
       const DOOR_MS = 3200;
-      const STUN_AT = DOOR_MS;
-      const VERDICT_AT = STUN_AT + 600;
-      const BURST_AT = VERDICT_AT + 900;
 
       // 도어 종료 → stungun 등장
       setTimeout(()=>{
-        try { door.pause(); } catch {}
         door.animate([{opacity:1},{opacity:0}],{duration:300,fill:'forwards'});
         setTimeout(()=>door.remove(), 320);
 
