@@ -433,6 +433,87 @@
       radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,.85) 100%);
   }
 
+  body[data-theme="konan"] {
+    --bg: #05060c;
+    --ink: #fff; --accent: #cfe6ff;
+    --font: 'Impact','Arial Black','Malgun Gothic',sans-serif;
+    --shake-amp: 14px;
+  }
+  body[data-theme="konan"] #stage::before {
+    background:
+      repeating-linear-gradient(0deg, rgba(180,220,255,.03) 0 1px, transparent 1px 4px),
+      radial-gradient(ellipse at center, transparent 25%, rgba(0,0,10,.9) 100%);
+  }
+  .konan-door {
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translate(-50%,-50%);
+    max-width: 92vw; max-height: 92vh;
+    z-index: 25;
+    object-fit: contain;
+    filter: drop-shadow(0 0 40px rgba(140,200,255,.5));
+  }
+  .konan-stungun {
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translate(-50%,-50%) scale(0);
+    max-width: 60vw; max-height: 60vh;
+    z-index: 28;
+    filter: drop-shadow(0 0 40px #88ccff) drop-shadow(0 0 80px #fff);
+    pointer-events: none;
+  }
+  .konan-verdict {
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translate(-50%,-50%);
+    font-family: var(--font);
+    font-size: 130px;
+    color: #fff;
+    font-weight: 900;
+    z-index: 32;
+    letter-spacing: -2px;
+    white-space: nowrap;
+    text-shadow:
+      0 0 18px #cfe6ff,
+      0 0 40px #4aa3ff,
+      0 0 80px #88ccff,
+      4px 4px 0 #001a3a,
+      -4px -4px 0 #001a3a;
+    -webkit-text-stroke: 2px #4aa3ff;
+  }
+  .konan-burst {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 20px; height: 20px;
+    transform: translate(-50%,-50%);
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff 0%, #cfe6ff 30%, #4aa3ff 55%, transparent 75%);
+    z-index: 30;
+    pointer-events: none;
+    mix-blend-mode: screen;
+  }
+  .konan-ring {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 40px; height: 40px;
+    transform: translate(-50%,-50%);
+    border: 8px solid #cfe6ff;
+    border-radius: 50%;
+    z-index: 29;
+    pointer-events: none;
+    box-shadow: 0 0 40px #88ccff, inset 0 0 40px #fff;
+  }
+  .konan-ray {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 6px; height: 4px;
+    transform-origin: 0 50%;
+    background: linear-gradient(90deg, #fff, #cfe6ff 40%, rgba(120,180,255,0));
+    z-index: 29;
+    pointer-events: none;
+    box-shadow: 0 0 12px #cfe6ff;
+  }
+
   /* ============ 스테이지 ============ */
   #stage {
     position: fixed;
@@ -906,6 +987,7 @@
     <button data-theme="press">유압프레스</button>
     <button data-theme="space">우주미아</button>
     <button data-theme="undertale">언더테일</button>
+    <button data-theme="konan">코난</button>
     <button data-theme="rage">격노</button>
     <button data-theme="nuclear">핵폭발</button>
   </div>
@@ -1608,6 +1690,129 @@ const THEMES = {
         }, 1700);
       }, 3200);
     }
+  },
+
+  konan: {
+    title: '명탐정 코난 · CASE CLOSED',
+    label: '범인 지목',
+    accent: '#cfe6ff',
+    palette: ['#ffffff','#cfe6ff','#88ccff','#4aa3ff'],
+    shoutClass: 'verdict',
+    detonate(text) {
+      const cx = innerWidth/2, cy = innerHeight/2;
+
+      // 0.0s : konan_door.mp4 재생
+      const door = document.createElement('video');
+      door.className = 'konan-door';
+      door.src = 'konan_door.mp4';
+      door.muted = true;
+      door.autoplay = true;
+      door.playsInline = true;
+      stage.appendChild(door);
+      door.play().catch(()=>{});
+      shake(0.4);
+
+      const DOOR_MS = 3200;
+      const STUN_AT = DOOR_MS;
+      const VERDICT_AT = STUN_AT + 600;
+      const BURST_AT = VERDICT_AT + 900;
+
+      // 도어 종료 → stungun 등장
+      setTimeout(()=>{
+        try { door.pause(); } catch {}
+        door.animate([{opacity:1},{opacity:0}],{duration:300,fill:'forwards'});
+        setTimeout(()=>door.remove(), 320);
+
+        const stun = document.createElement('img');
+        stun.className = 'konan-stungun';
+        stun.src = 'konan-stungun.png';
+        stage.appendChild(stun);
+        stun.animate([
+          { transform: 'translate(-50%,-50%) scale(0) rotate(-30deg)', opacity: 0 },
+          { transform: 'translate(-50%,-50%) scale(1.25) rotate(5deg)', opacity: 1, offset: 0.6 },
+          { transform: 'translate(-50%,-50%) scale(1) rotate(0deg)', opacity: 1 }
+        ], { duration: 500, easing: 'cubic-bezier(.2,.9,.3,1.2)', fill: 'forwards' });
+        flashOn();
+        shake(0.8);
+
+        // verdict 등장
+        setTimeout(()=>{
+          const v = document.createElement('div');
+          v.className = 'konan-verdict';
+          v.textContent = `범인은 바로 ${text} 너야!`;
+          stage.appendChild(v);
+          v.animate([
+            { transform: 'translate(-50%,-50%) scale(0.3)', opacity: 0 },
+            { transform: 'translate(-50%,-50%) scale(1.15)', opacity: 1, offset: 0.55 },
+            { transform: 'translate(-50%,-50%) scale(1)', opacity: 1 }
+          ], { duration: 400, easing: 'cubic-bezier(.2,.9,.3,1.2)', fill: 'forwards' });
+          shake(1);
+          zoomPunch();
+
+          // 빛 폭발
+          setTimeout(()=>{
+            // 중앙 거대 화이트/블루 광구
+            const burst = document.createElement('div');
+            burst.className = 'konan-burst';
+            stage.appendChild(burst);
+            burst.animate([
+              { width: '20px', height: '20px', opacity: 0 },
+              { width: '600px', height: '600px', opacity: 1, offset: 0.3 },
+              { width: '2600px', height: '2600px', opacity: 0 }
+            ], { duration: 1200, easing: 'cubic-bezier(.1,.8,.3,1)', fill: 'forwards' });
+            setTimeout(()=>burst.remove(), 1300);
+
+            // 충격파 링 3개
+            for (let i=0;i<3;i++) {
+              setTimeout(()=>{
+                const ring = document.createElement('div');
+                ring.className = 'konan-ring';
+                stage.appendChild(ring);
+                ring.animate([
+                  { width: '40px', height: '40px', opacity: 1, borderWidth: '10px' },
+                  { width: '2800px', height: '2800px', opacity: 0, borderWidth: '1px' }
+                ], { duration: 1300, easing: 'cubic-bezier(.1,.8,.2,1)', fill: 'forwards' });
+                setTimeout(()=>ring.remove(), 1350);
+              }, i*140);
+            }
+
+            // 방사형 광선
+            for (let i=0;i<24;i++) {
+              const ray = document.createElement('div');
+              ray.className = 'konan-ray';
+              const ang = (i/24)*360 + rand(-6,6);
+              ray.style.transform = `translate(0,-50%) rotate(${ang}deg)`;
+              stage.appendChild(ray);
+              ray.animate([
+                { width: '6px', opacity: 0 },
+                { width: '40px', opacity: 1, offset: 0.2 },
+                { width: '1600px', opacity: 0 }
+              ], { duration: 900, easing: 'cubic-bezier(.1,.8,.3,1)', fill: 'forwards' });
+              setTimeout(()=>ray.remove(), 950);
+            }
+
+            // 푸른빛 파편
+            for (let i=0;i<60;i++) spawnShard(cx, cy, pick(['#ffffff','#cfe6ff','#88ccff','#4aa3ff']));
+
+            flashOn();
+            shake(2.4);
+            zoomPunch();
+            hitStop(150);
+
+            // verdict 폭발 — 확대되며 사라짐
+            v.animate([
+              { transform: 'translate(-50%,-50%) scale(1)', opacity: 1, filter: 'blur(0)' },
+              { transform: 'translate(-50%,-50%) scale(2.4)', opacity: 0, filter: 'blur(8px)' }
+            ], { duration: 700, easing: 'cubic-bezier(.4,0,.6,1)', fill: 'forwards' });
+            stun.animate([
+              { transform: 'translate(-50%,-50%) scale(1)', opacity: 1 },
+              { transform: 'translate(-50%,-50%) scale(1.6)', opacity: 0 }
+            ], { duration: 700, easing: 'cubic-bezier(.4,0,.6,1)', fill: 'forwards' });
+            setTimeout(()=>{ v.remove(); stun.remove(); spawnShatter(text); }, 720);
+          }, 900);
+        }, 600);
+      }, DOOR_MS);
+    }
   }
 };
 
@@ -2160,7 +2365,7 @@ function broadcastDetonate(text) {
 /* ============ 통합 큐 (로컬 + 원격 동일 경로) ============ */
 // 모든 외침은 무조건 큐를 통과해서 한 번에 하나씩, 현재 연출이 끝날 때까지 대기
 const CLIENT_ID = Math.random().toString(36).slice(2) + Date.now().toString(36);
-const THEME_DURATION = { curse: 4200, execute: 5200, bear: 5500, rage: 3200, nuclear: 6200, press: 4500, space: 9200, undertale: 11000 };
+const THEME_DURATION = { curse: 4200, execute: 5200, bear: 5500, rage: 3200, nuclear: 6200, press: 4500, space: 9200, undertale: 11000, konan: 6500 };
 const QUEUE_GAP = 250; // 연출 사이 짧은 정적
 
 const shoutQueue = [];
