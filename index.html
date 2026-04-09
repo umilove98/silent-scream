@@ -453,6 +453,7 @@
     object-fit: contain;
     filter: drop-shadow(0 0 40px rgba(140,200,255,.5));
   }
+  canvas.konan-door { background: transparent; }
   .konan-stungun {
     position: absolute;
     left: 50%; top: 50%;
@@ -467,12 +468,15 @@
     left: 50%; top: 50%;
     transform: translate(-50%,-50%);
     font-family: var(--font);
-    font-size: 130px;
     color: #fff;
     font-weight: 900;
     z-index: 32;
     letter-spacing: -2px;
-    white-space: nowrap;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
     text-shadow:
       0 0 18px #cfe6ff,
       0 0 40px #4aa3ff,
@@ -481,6 +485,8 @@
       -4px -4px 0 #001a3a;
     -webkit-text-stroke: 2px #4aa3ff;
   }
+  .konan-verdict .line1 { font-size: 110px; white-space: nowrap; }
+  .konan-verdict .line2 { font-size: 150px; white-space: nowrap; color: #ffe9a8; -webkit-text-stroke: 2px #ff8a2a; text-shadow: 0 0 18px #ffd27a, 0 0 40px #ff8a2a, 4px 4px 0 #2a1500, -4px -4px 0 #2a1500; }
   .konan-burst {
     position: absolute;
     left: 50%; top: 50%;
@@ -1698,51 +1704,100 @@ const THEMES = {
     accent: '#cfe6ff',
     palette: ['#ffffff','#cfe6ff','#88ccff','#4aa3ff'],
     shoutClass: 'verdict',
-    detonate(text) {
+    async detonate(text) {
       const cx = innerWidth/2, cy = innerHeight/2;
 
-      // 0.0s : konan_door.webp 재생
-      const door = document.createElement('img');
+      // 0.0s : konan_door.webp 를 ImageDecoder로 디코드해서 0.5배속으로 1회 재생
+      const door = document.createElement('canvas');
       door.className = 'konan-door';
-      door.src = 'konan_door.webp?t=' + Date.now();
       stage.appendChild(door);
       shake(0.4);
 
-      const DOOR_MS = 3200;
+      const SPEED = 0.5;
+      const FALLBACK_MS = 3000 / SPEED;
 
-      // 도어 종료 → stungun 등장
-      setTimeout(()=>{
-        door.animate([{opacity:1},{opacity:0}],{duration:300,fill:'forwards'});
-        setTimeout(()=>door.remove(), 320);
+      const doorRef = { el: door };
+      try {
+        if (typeof ImageDecoder === 'undefined') throw new Error('no ImageDecoder');
+        const resp = await fetch('konan_door.webp');
+        const blob = await resp.blob();
+        const dec = new ImageDecoder({ data: blob, type: 'image/webp' });
+        await dec.tracks.ready;
+        const track = dec.tracks.selectedTrack;
+        const frameCount = track.frameCount || 1;
+        const ctx = door.getContext('2d');
+        for (let i = 0; i < frameCount; i++) {
+          const { image } = await dec.decode({ frameIndex: i });
+          if (i === 0) { door.width = image.displayWidth; door.height = image.displayHeight; }
+          ctx.clearRect(0, 0, door.width, door.height);
+          ctx.drawImage(image, 0, 0);
+          const durMs = (image.duration || 100000) / 1000;
+          await new Promise(r => setTimeout(r, durMs / SPEED));
+        }
+      } catch (e) {
+        // fallback: ImageDecoder 미지원 → img로 표시 + 고정 시간 대기
+        door.remove();
+        const fb = document.createElement('img');
+        fb.className = 'konan-door';
+        fb.src = 'konan_door.webp';
+        stage.appendChild(fb);
+        doorRef.el = fb;
+        await new Promise(r => setTimeout(r, FALLBACK_MS));
+      }
 
-        const stun = document.createElement('img');
-        stun.className = 'konan-stungun';
-        stun.src = 'konan-stungun.png';
-        stage.appendChild(stun);
-        stun.animate([
-          { transform: 'translate(-50%,-50%) scale(0) rotate(-30deg)', opacity: 0 },
-          { transform: 'translate(-50%,-50%) scale(1.25) rotate(5deg)', opacity: 1, offset: 0.6 },
-          { transform: 'translate(-50%,-50%) scale(1) rotate(0deg)', opacity: 1 }
-        ], { duration: 500, easing: 'cubic-bezier(.2,.9,.3,1.2)', fill: 'forwards' });
-        flashOn();
-        shake(0.8);
+      // 도어 페이드아웃
+      const doorEl = doorRef.el;
+      doorEl.animate([{opacity:1},{opacity:0}],{duration:300,fill:'forwards'});
+      setTimeout(()=>doorEl.remove(), 320);
 
-        // verdict 등장
-        setTimeout(()=>{
-          const v = document.createElement('div');
-          v.className = 'konan-verdict';
-          v.textContent = `범인은 바로 ${text} 너야!`;
-          stage.appendChild(v);
-          v.animate([
-            { transform: 'translate(-50%,-50%) scale(0.3)', opacity: 0 },
-            { transform: 'translate(-50%,-50%) scale(1.15)', opacity: 1, offset: 0.55 },
-            { transform: 'translate(-50%,-50%) scale(1)', opacity: 1 }
-          ], { duration: 400, easing: 'cubic-bezier(.2,.9,.3,1.2)', fill: 'forwards' });
-          shake(1);
-          zoomPunch();
+      // verdict 컨테이너 — 1줄: "범인은 바로", 2줄: "{text}"
+      const v = document.createElement('div');
+      v.className = 'konan-verdict';
+      const line1 = document.createElement('div');
+      line1.className = 'line1';
+      line1.textContent = '범인은 바로';
+      const line2 = document.createElement('div');
+      line2.className = 'line2';
+      line2.textContent = `"${text}"`;
+      line2.style.opacity = '0';
+      v.appendChild(line1);
+      v.appendChild(line2);
+      stage.appendChild(v);
+      line1.animate([
+        { transform: 'translateY(20px) scale(0.6)', opacity: 0 },
+        { transform: 'translateY(0) scale(1.1)', opacity: 1, offset: 0.6 },
+        { transform: 'translateY(0) scale(1)', opacity: 1 }
+      ], { duration: 400, easing: 'cubic-bezier(.2,.9,.3,1.2)', fill: 'forwards' });
+      shake(0.8);
 
-          // 빛 폭발
-          setTimeout(()=>{
+      // 700ms 후 line2 등장
+      await new Promise(r => setTimeout(r, 700));
+      line2.style.opacity = '';
+      line2.animate([
+        { transform: 'translateY(30px) scale(0.4)', opacity: 0 },
+        { transform: 'translateY(-6px) scale(1.25)', opacity: 1, offset: 0.55 },
+        { transform: 'translateY(0) scale(1)', opacity: 1 }
+      ], { duration: 450, easing: 'cubic-bezier(.2,.9,.3,1.3)', fill: 'forwards' });
+      flashOn();
+      shake(1.1);
+      zoomPunch();
+
+      // 600ms 후 마취총 발사 + 빛 폭발
+      await new Promise(r => setTimeout(r, 600));
+      const stun = document.createElement('img');
+      stun.className = 'konan-stungun';
+      stun.src = 'konan-stungun.png';
+      stage.appendChild(stun);
+      stun.animate([
+        { transform: 'translate(-50%,-50%) scale(0) rotate(-30deg)', opacity: 0 },
+        { transform: 'translate(-50%,-50%) scale(1.25) rotate(5deg)', opacity: 1, offset: 0.6 },
+        { transform: 'translate(-50%,-50%) scale(1) rotate(0deg)', opacity: 1 }
+      ], { duration: 400, easing: 'cubic-bezier(.2,.9,.3,1.2)', fill: 'forwards' });
+      flashOn();
+      shake(1.4);
+
+      await new Promise(r => setTimeout(r, 350));
+      {
             // 중앙 거대 화이트/블루 광구
             const burst = document.createElement('div');
             burst.className = 'konan-burst';
@@ -1801,9 +1856,7 @@ const THEMES = {
               { transform: 'translate(-50%,-50%) scale(1.6)', opacity: 0 }
             ], { duration: 700, easing: 'cubic-bezier(.4,0,.6,1)', fill: 'forwards' });
             setTimeout(()=>{ v.remove(); stun.remove(); spawnShatter(text); }, 720);
-          }, 900);
-        }, 600);
-      }, DOOR_MS);
+      }
     }
   }
 };
@@ -2357,7 +2410,7 @@ function broadcastDetonate(text) {
 /* ============ 통합 큐 (로컬 + 원격 동일 경로) ============ */
 // 모든 외침은 무조건 큐를 통과해서 한 번에 하나씩, 현재 연출이 끝날 때까지 대기
 const CLIENT_ID = Math.random().toString(36).slice(2) + Date.now().toString(36);
-const THEME_DURATION = { curse: 4200, execute: 5200, bear: 5500, rage: 3200, nuclear: 6200, press: 4500, space: 9200, undertale: 11000, konan: 6500 };
+const THEME_DURATION = { curse: 4200, execute: 5200, bear: 5500, rage: 3200, nuclear: 6200, press: 4500, space: 9200, undertale: 11000, konan: 11000 };
 const QUEUE_GAP = 250; // 연출 사이 짧은 정적
 
 const shoutQueue = [];
