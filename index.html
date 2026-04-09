@@ -481,6 +481,7 @@
   }
   .konan-verdict .line1 { font-size: 44px; white-space: nowrap; }
   .konan-verdict .line2 { font-size: 56px; white-space: nowrap; }
+  .konan-verdict .line3 { font-size: 64px; white-space: nowrap; }
   .konan-burst {
     position: absolute;
     left: 50%; top: 50%;
@@ -1737,8 +1738,13 @@ const THEMES = {
       line2.className = 'line2';
       line2.textContent = `"${text}"`;
       line2.style.opacity = '0';
+      const line3 = document.createElement('div');
+      line3.className = 'line3';
+      line3.textContent = '너야!!!';
+      line3.style.opacity = '0';
       v.appendChild(line1);
       v.appendChild(line2);
+      v.appendChild(line3);
       stage.appendChild(v);
       line1.animate([
         { opacity: 0, transform: 'translateY(8px)' },
@@ -1753,7 +1759,15 @@ const THEMES = {
         { opacity: 1, transform: 'translateY(0)' }
       ], { duration: 280, fill: 'forwards' });
 
-      // 2.65s : 발사 → 빛 폭발
+      // line3 "너야!!!"
+      await new Promise(r => setTimeout(r, 600));
+      line3.style.opacity = '';
+      line3.animate([
+        { opacity: 0, transform: 'translateY(8px)' },
+        { opacity: 1, transform: 'translateY(0)' }
+      ], { duration: 280, fill: 'forwards' });
+
+      // 발사 → 빛 폭발
       await new Promise(r => setTimeout(r, 600));
       {
             // 중앙 거대 화이트/블루 광구
@@ -2368,7 +2382,7 @@ function broadcastDetonate(text) {
 /* ============ 통합 큐 (로컬 + 원격 동일 경로) ============ */
 // 모든 외침은 무조건 큐를 통과해서 한 번에 하나씩, 현재 연출이 끝날 때까지 대기
 const CLIENT_ID = Math.random().toString(36).slice(2) + Date.now().toString(36);
-const THEME_DURATION = { curse: 4200, execute: 5200, bear: 5500, rage: 3200, nuclear: 6200, press: 4500, space: 9200, undertale: 11000, konan: 11000 };
+const THEME_DURATION = { curse: 4200, execute: 5200, bear: 5500, rage: 3200, nuclear: 6200, press: 4500, space: 9200, undertale: 11000, konan: 12000 };
 const QUEUE_GAP = 250; // 연출 사이 짧은 정적
 
 const shoutQueue = [];
